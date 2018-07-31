@@ -2,6 +2,7 @@ package sqlparser
 
 import org.antlr.v4.kotlinruntime.*
 import org.antlr.v4.kotlinruntime.misc.ParseCancellationException
+import org.antlr.v4.kotlinruntime.tree.TerminalNode
 
 sealed class Ast {
     data class File(val statements: List<Statement>): Ast()
@@ -13,6 +14,16 @@ sealed class Ast {
 
     data class Identifier(val qualifier: String?, val identifier: String): Ast()
     data class ColumnDefinition(val columnName: Identifier, val type: String): Ast()
+    sealed class Expression: Ast() {
+        sealed class Literal: Expression() {
+            data class DateLiteral(val value: String): Literal()
+            data class StringLiteral(val value: String): Literal()
+            data class IntLiteral(val value: Long): Literal()
+            data class FloatLiteral(val value: Double): Literal()
+            data class BooleanLiteral(val value: Boolean): Literal()
+            object NullLiteral: Literal()
+        }
+    }
 }
 
 // Top level parse functions
@@ -22,6 +33,10 @@ fun parseFile(sql: String, strict: Boolean = false): Ast.File {
 
 fun parseStatement(sql: String, strict: Boolean = false): Ast.Statement {
     return parseStatement(sql.parser(strict).singleStmt().findStmt()!!)
+}
+
+fun parseExpression(sql: String, strict: Boolean = false): Ast.Expression {
+    return parseExpression(sql.parser(strict).singleExpression().findExpression()!!)
 }
 
 
@@ -66,6 +81,27 @@ private fun parseColumnDefinition(node: SqlParser.CreateTableStmtColumnSpecConte
 }
 
 
+private fun parseExpression(node: SqlParser.ExpressionContext): Ast.Expression {
+    return when {
+        node.findLiteral() != null -> parseLiteral(node.findLiteral()!!)
+        else -> TODO("Can't parse expression ${node.text}")
+    }
+}
+
+private fun parseLiteral(node: SqlParser.LiteralContext): Ast.Expression.Literal {
+    return when {
+        node.FALSE() != null -> Ast.Expression.Literal.BooleanLiteral(false)
+        node.TRUE() != null -> Ast.Expression.Literal.BooleanLiteral(true)
+        node.NULL() != null -> Ast.Expression.Literal.NullLiteral
+        node.DATE() != null -> Ast.Expression.Literal.DateLiteral(parseStringLit(node.STRING_LITERAL()!!))
+        node.STRING_LITERAL() != null -> Ast.Expression.Literal.StringLiteral(parseStringLit(node.STRING_LITERAL()!!))
+        node.POSITIVE_FLOAT_LITERAL() != null -> Ast.Expression.Literal.FloatLiteral(node.POSITIVE_FLOAT_LITERAL()!!.text.toDouble())
+        node.POSITIVE_INT_LITERAL() != null -> Ast.Expression.Literal.IntLiteral(node.POSITIVE_INT_LITERAL()!!.text.toLong())
+        else -> TODO("Can't parse literal ${node.text}")
+    }
+}
+
+
 private fun parseQualifiedIdentifier(node: SqlParser.QualifiedIdentifierContext): Ast.Identifier {
     val components = node.findSimpleIdentifier().map(::parseSimpleIdentifier)
     return if (components.size > 1) {
@@ -79,6 +115,11 @@ private fun parseQualifiedIdentifier(node: SqlParser.QualifiedIdentifierContext)
 private fun parseSimpleIdentifier(node: SqlParser.SimpleIdentifierContext): Ast.Identifier {
     val identifier = node.text.toLowerCase()
     return Ast.Identifier(null, identifier)
+}
+
+private fun parseStringLit(node: TerminalNode): String {
+    val str = node.text
+    return str.substring(1, str.length -1 )
 }
 
 private fun String.parser(strict: Boolean = false): SqlParser {
