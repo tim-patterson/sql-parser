@@ -1,3 +1,3 @@
 buildscript {
-    ext.antlr_kotlin_version = '596ee86'
+    ext.antlr_kotlin_version = 'bdb861c'
 }

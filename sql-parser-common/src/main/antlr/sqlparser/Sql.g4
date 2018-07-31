@@ -89,14 +89,14 @@ ifExists
 
 expression
   : OP_OPEN_BRACKET expression OP_CLOSE_BRACKET
+  | OP_MINUS expression
   | expression ( OP_MULT | OP_DIV ) expression
   | expression ( OP_PLUS | OP_MINUS ) expression
   | expression ( OP_GT | OP_GTE | OP_LT | OP_LTE ) expression
   | expression ( OP_EQ | OP_NEQ ) expression
   | expression IS NULL
   | expression IS NOT NULL
-  | expression ( OP_AND | OP_OR ) expression
-  | OP_MINUS expression
+  | expression ( AND | OR ) expression
   | literal
   | qualifiedIdentifier
   | functionCall

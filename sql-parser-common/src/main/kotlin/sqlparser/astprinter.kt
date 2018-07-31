@@ -32,13 +32,46 @@ open class SqlPrinter {
 
     protected open fun render(node: Statement.CreateTable): String {
         return "CREATE TABLE ${render(node.tableName)} (\n" +
-              node.columns.map { render(it) }.joinToString(",\n  ", "  ", "\n") +
+              node.columns.joinToString(",\n  ", "  ", "\n") { render(it) } +
                 ");"
     }
 
     protected open fun render(node: Expression): String {
         return when(node) {
             is Expression.Literal -> render(node)
+            is Expression.Reference -> render(node)
+            is Expression.FunctionCall -> render(node)
+        }
+    }
+
+    protected open fun render(node: Expression.Reference): String {
+        return render(node.identifier)
+    }
+
+    protected open fun render(node: Expression.FunctionCall): String {
+        val rawArgs = node.args
+
+        return if(node.infix) {
+            // For each of the args if its another infix function then we need to wrap in
+            // brackets
+            val args = rawArgs.map {
+                if (it is Expression.FunctionCall && it.infix) {
+                    "(${render(it)})"
+                } else {
+                    render(it)
+                }
+            }
+
+            if (args.size == 1) {
+                // special case for unitary minus
+                "${node.functionName} ${args[0]}"
+            } else {
+                "${args[0]} ${node.functionName} ${args[1]}"
+            }
+
+        } else {
+            val args = rawArgs.map(::render)
+            "${node.functionName}(${args.joinToString()})"
         }
     }
 

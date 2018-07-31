@@ -23,6 +23,8 @@ sealed class Ast {
             data class BooleanLiteral(val value: Boolean): Literal()
             object NullLiteral: Literal()
         }
+        data class FunctionCall(val functionName: String, val args: List<Expression>, val infix: Boolean=false): Expression()
+        data class Reference(val identifier: Ast.Identifier): Expression()
     }
 }
 
@@ -82,8 +84,33 @@ private fun parseColumnDefinition(node: SqlParser.CreateTableStmtColumnSpecConte
 
 
 private fun parseExpression(node: SqlParser.ExpressionContext): Ast.Expression {
+    val subExpressions = node.findExpression().map(::parseExpression)
     return when {
         node.findLiteral() != null -> parseLiteral(node.findLiteral()!!)
+        node.AND() != null -> Ast.Expression.FunctionCall("AND", subExpressions, true)
+        node.OR() != null -> Ast.Expression.FunctionCall("OR", subExpressions, true)
+        node.OP_DIV() != null -> Ast.Expression.FunctionCall("/", subExpressions, true)
+        node.OP_MULT() != null -> Ast.Expression.FunctionCall("*", subExpressions, true)
+        node.OP_PLUS() != null -> Ast.Expression.FunctionCall("+", subExpressions, true)
+        node.OP_MINUS() != null -> Ast.Expression.FunctionCall("-", subExpressions, true)
+        node.OP_EQ() != null -> Ast.Expression.FunctionCall("=", subExpressions, true)
+        node.OP_GT() != null -> Ast.Expression.FunctionCall(">", subExpressions, true)
+        node.OP_GTE() != null -> Ast.Expression.FunctionCall(">=", subExpressions, true)
+        node.OP_LT() != null -> Ast.Expression.FunctionCall("<", subExpressions, true)
+        node.OP_LTE() != null -> Ast.Expression.FunctionCall("<=", subExpressions, true)
+        node.OP_NEQ() != null -> Ast.Expression.FunctionCall("!=", subExpressions, true)
+        node.NOT() != null -> Ast.Expression.FunctionCall("IS NOT NULL", subExpressions, true)
+        node.NULL() != null -> Ast.Expression.FunctionCall("IS NULL", subExpressions, true)
+        node.findQualifiedIdentifier() != null -> {
+            Ast.Expression.Reference(parseQualifiedIdentifier(node.findQualifiedIdentifier()!!))
+        }
+        node.findFunctionCall() != null -> {
+            val functionCall = node.findFunctionCall()!!
+            val args = functionCall.findExpression().map(::parseExpression)
+            val functionName = parseSimpleIdentifier(functionCall.findSimpleIdentifier()!!).identifier
+            Ast.Expression.FunctionCall(functionName, args)
+        }
+        node.OP_OPEN_BRACKET() != null -> subExpressions.single()
         else -> TODO("Can't parse expression ${node.text}")
     }
 }
