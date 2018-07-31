@@ -1,0 +1,3 @@
+buildscript {
+    ext.antlr_kotlin_version = '2b7630b'
+}
