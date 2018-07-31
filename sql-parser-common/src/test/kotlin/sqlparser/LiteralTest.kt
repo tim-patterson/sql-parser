@@ -56,7 +56,7 @@ class LiteralTest {
     @Test
     fun testNullLiteral() {
         val expression = "nuLL"
-        val expected = Ast.Expression.Literal.NullLiteral
+        val expected = Ast.Expression.Literal.NullLiteral()
 
         assertEquals(expected, parseExpression(expression, true))
     }
