@@ -7,6 +7,15 @@ import kotlin.test.assertEquals
 class LiteralTest {
 
     @Test
+    fun testWrongStringLiteral() {
+        val expression = "\"Hello world\""
+        val expected = Ast.Expression.Reference(Ast.Identifier(null,"hello world"))
+
+        assertEquals(expected, parseExpression(expression, true, Dialect.POSTGRES))
+    }
+
+
+    @Test
     fun testStringLiteral() {
         val expression = "\"Hello world\""
         val expected = Ast.Expression.Literal.StringLiteral("Hello world")
