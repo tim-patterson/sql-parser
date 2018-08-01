@@ -4,6 +4,9 @@ grammar Sql;
  package sqlparser;
 }
 
+
+tokens { STRING_LITERAL }
+
 file
   : stmt (';' stmt)* ';'? EOF
   ;
@@ -19,6 +22,7 @@ singleExpression
 stmt
   : createSchemaStmt
   | createTableStmt
+  | selectStmt
   ;
 
 createSchemaStmt
@@ -31,8 +35,11 @@ createSchemaStmtAuthorizationClause
   ;
 
 createTableStmt
-  : CREATE temporary? EXTERNAL? TABLE qualifiedIdentifier
-  createTableStmtColumnList
+  : CREATE temporary? EXTERNAL? TABLE qualifiedIdentifier createTableStmtColumnList
+  ;
+
+selectStmt
+  : selectClause
   ;
 
 createTableStmtColumnList
@@ -79,6 +86,54 @@ temporary
   | TEMPORARY
   ;
 
+selectClause
+  : SELECT DISTINCT? namedExpression (OP_COMMA namedExpression)*
+  fromClause?
+  whereClause?
+  groupByClause?
+  havingClause?
+  orderByClause?
+  limitClause?
+  ;
+
+fromClause
+  : FROM querySource (AS? simpleIdentifier)?
+  ;
+
+whereClause
+  : WHERE expression
+  ;
+
+groupByClause
+  : GROUP BY expression (OP_COMMA expression)
+  ;
+
+havingClause
+  : HAVING expression
+  ;
+
+orderByClause
+  : ORDER BY orderByExpression (OP_COMMA orderByExpression)
+  ;
+
+orderByExpression
+  : expression ( ASC | DESC )?
+  ;
+
+limitClause
+  : LIMIT POSITIVE_INT_LITERAL
+  ;
+
+querySource
+  : qualifiedIdentifier
+  | OP_OPEN_BRACKET selectClause OP_CLOSE_BRACKET
+  ;
+
+namedExpression
+  : expression
+  | expression AS? simpleIdentifier
+  ;
+
 ifNotExists
   : IF NOT EXISTS
   ;
@@ -113,15 +168,6 @@ windowSpec
 windowSpecPartition
   : PARTITION BY expression
   ;
-
-orderByClause
-  : ORDER BY orderByExpression (OP_COMMA orderByExpression)
-  ;
-
-orderByExpression
-  : expression ( ASC | DESC )?
-  ;
-
 
 qualifiedIdentifier
   : simpleIdentifier (OP_DOT simpleIdentifier)?
@@ -396,7 +442,6 @@ OP_COLON: ':';
 
 IDENTIFIER
  : [a-zA-Z_] [a-zA-Z_0-9]*
- | '`' ( ~'`' )* '`'
  ;
 
 // Literals
@@ -404,14 +449,22 @@ POSITIVE_INT_LITERAL
  : DIGIT+
  ;
 
-
 POSITIVE_FLOAT_LITERAL
  : DIGIT+ ( '.' DIGIT* )?
  ;
 
-STRING_LITERAL
+// These 3 rules aren't used directly by the parser, but rely on the code to change the
+// token type to IDENTIFIER or STRING_LITERAL where appropriate
+BACKTICKED_LIT
+ : '`' ( ~'`' )* '`'
+ ;
+
+SINGLE_QUOTED_LIT
  : '\'' (('\\' .) | ~('\\' | '\''))* '\''
- | '"' (('\\' .) | ~('\\' | '"'))* '"'
+ ;
+
+DOUBLE_QUOTED_LIT
+ : '"' (('\\' .) | ~('\\' | '"'))* '"'
  ;
 
 // Whitespace

@@ -12,6 +12,9 @@ sealed class Ast {
     sealed class Statement: Ast() {
         data class CreateSchema(val schemaName: Identifier, val ifNotExists: Boolean = false, override val sourcePosition: SP = SP()): Statement()
         data class CreateTable(val tableName: Identifier, val columns: List<ColumnDefinition>, override val sourcePosition: SP = SP()): Statement()
+        // Why have a selectStmt and and selectClause you may ask, the selectStmt is simply a wrapper that denotes
+        // the statement is at the top level
+        data class SelectStmt(val selectClause: SelectClause, override val sourcePosition: SP = SP()): Statement()
     }
 
     data class Identifier(val qualifier: String?, val identifier: String, override val sourcePosition: SP = SP()): Ast()
@@ -28,6 +31,10 @@ sealed class Ast {
         data class FunctionCall(val functionName: String, val args: List<Expression>, val infix: Boolean=false, override val sourcePosition: SP = SP()): Expression()
         data class Reference(val identifier: Ast.Identifier, override val sourcePosition: SP = SP()): Expression()
     }
+
+    data class NamedExpression(val name: String?, val expression: Expression, override val sourcePosition: SP = SP()): Ast()
+    data class OrderExpression(val expression: Expression, val asc: Boolean = true, override val sourcePosition: SP = SP()): Ast()
+    data class SelectClause(val selectExpressions: List<NamedExpression>, override val sourcePosition: SP = SP()): Ast()
 }
 
 // Wrapper class to stop Ast objects using Source position for equality,

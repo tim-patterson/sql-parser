@@ -16,9 +16,13 @@ open class SqlPrinter {
             is File -> render(node)
             is Statement.CreateSchema -> render(node)
             is Statement.CreateTable -> render(node)
+            is Statement.SelectStmt -> render(node)
             is ColumnDefinition -> render(node)
             is Identifier -> render(node)
             is Expression -> render(node)
+            is NamedExpression -> render(node)
+            is OrderExpression -> render(node)
+            is SelectClause -> render(node)
         }
     }
 
@@ -34,6 +38,27 @@ open class SqlPrinter {
         return "CREATE TABLE ${render(node.tableName)} (\n" +
               node.columns.joinToString(",\n  ", "  ", "\n") { render(it) } +
                 ");"
+    }
+
+    protected open fun render(node: Statement.SelectStmt): String {
+        return "${render(node.selectClause)};"
+    }
+
+    protected open fun render(node: SelectClause): String {
+        return "SELECT " + node.selectExpressions.joinToString{ render(it) }
+    }
+
+    protected open fun render(node: NamedExpression): String {
+        return if (node.name != null) {
+            "${render(node.expression)} AS ${node.name}"
+        } else {
+            render(node.expression)
+        }
+    }
+
+    protected open fun render(node: OrderExpression): String {
+        val ascDesc = if(node.asc) "ASC" else "DESC"
+        return "${render(node.expression)} $ascDesc"
     }
 
     protected open fun render(node: Expression): String {

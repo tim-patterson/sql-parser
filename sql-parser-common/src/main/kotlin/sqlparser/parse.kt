@@ -10,16 +10,16 @@ import sqlparser.Ast.Expression.Literal.*
 
 
 // Top level parse functions
-fun parseFile(sql: String, strict: Boolean = false): Ast.File {
-    return parseFile(sql.parser(strict).file())
+fun parseFile(sql: String, strict: Boolean = false, dialect: Dialect = Dialect.DEFAULT): Ast.File {
+    return parseFile(sql.parser(dialect, strict).file())
 }
 
-fun parseStatement(sql: String, strict: Boolean = false): Ast.Statement {
-    return parseStatement(sql.parser(strict).singleStmt().findStmt()!!)
+fun parseStatement(sql: String, strict: Boolean = false, dialect: Dialect = Dialect.DEFAULT): Ast.Statement {
+    return parseStatement(sql.parser(dialect, strict).singleStmt().findStmt()!!)
 }
 
-fun parseExpression(sql: String, strict: Boolean = false): Ast.Expression {
-    return parseExpression(sql.parser(strict).singleExpression().findExpression()!!)
+fun parseExpression(sql: String, strict: Boolean = false, dialect: Dialect = Dialect.DEFAULT): Ast.Expression {
+    return parseExpression(sql.parser(dialect, strict).singleExpression().findExpression()!!)
 }
 
 
@@ -35,6 +35,7 @@ private fun parseStatement(node: SqlParser.StmtContext) : Statement {
     return when {
         node.findCreateSchemaStmt() != null -> parseCreateSchemaStmt(node.findCreateSchemaStmt()!!)
         node.findCreateTableStmt() != null -> parseCreateTableStmt(node.findCreateTableStmt()!!)
+        node.findSelectStmt() != null -> parseSelectStmt(node.findSelectStmt()!!)
         else -> TODO()
     }
 }
@@ -53,6 +54,25 @@ private fun parseCreateTableStmt(node: SqlParser.CreateTableStmtContext): Statem
     val tableName = parseQualifiedIdentifier(node.findQualifiedIdentifier()!!)
     val columns = node.findCreateTableStmtColumnList()!!.findCreateTableStmtColumnSpec().map(::parseColumnDefinition)
     return Ast.Statement.CreateTable(tableName, columns, pos)
+}
+
+private fun parseSelectStmt(node: SqlParser.SelectStmtContext): Statement.SelectStmt {
+    val pos = SourcePosition(node.position)
+    val selectClause = parseSelectClause(node.findSelectClause()!!)
+    return Statement.SelectStmt(selectClause, pos)
+}
+
+private fun parseSelectClause(node: SqlParser.SelectClauseContext): SelectClause {
+    val pos = SourcePosition(node.position)
+    val expressions = node.findNamedExpression().map(::parseNamedExpression)
+    return SelectClause(expressions, pos)
+}
+
+private fun parseNamedExpression(node: SqlParser.NamedExpressionContext): NamedExpression {
+    val pos = SourcePosition(node.position)
+    val expression = parseExpression(node.findExpression()!!)
+    val name = node.findSimpleIdentifier()?.let { parseSimpleIdentifier(it).identifier }
+    return NamedExpression(name, expression, pos)
 }
 
 private fun parseColumnDefinition(node: SqlParser.CreateTableStmtColumnSpecContext): ColumnDefinition {
@@ -136,10 +156,11 @@ private fun parseStringLit(node: TerminalNode): String {
     return str.substring(1, str.length -1 )
 }
 
-private fun String.parser(strict: Boolean = false): SqlParser {
+private fun String.parser(dialect: Dialect, strict: Boolean = false): SqlParser {
     val input = ANTLRInputStream(this)
     val lexer = SqlLexer(input)
-    val tokens = CommonTokenStream(lexer)
+    val tokens = CommonTokenStream(DialectRewriter(lexer, dialect))
+
     val parser = SqlParser(tokens)
     if (strict) {
         parser.addErrorListener(ThrowingErrorListener)
@@ -151,5 +172,27 @@ private object ThrowingErrorListener : BaseErrorListener() {
     override fun syntaxError(recognizer: Recognizer<*, *>, offendingSymbol: Any?, line: Int, charPositionInLine: Int, msg: String, e: RecognitionException?) {
         // println("line $line:$charPositionInLine $msg")
         throw ParseCancellationException("line $line:$charPositionInLine $msg")
+    }
+}
+
+private class DialectRewriter(val delegate: TokenSource, val dialect: Dialect): TokenSource by delegate {
+
+    private class MasqueradingToken(val token: Token, override val type: Int): Token by token
+
+    override fun nextToken(): Token {
+        val token = delegate.nextToken()
+        return when(token.type) {
+            SqlLexer.Tokens.SINGLE_QUOTED_LIT.id -> MasqueradingToken(token,tokenTypeForLit(dialect.singleQuote))
+            SqlLexer.Tokens.DOUBLE_QUOTED_LIT.id -> MasqueradingToken(token,tokenTypeForLit(dialect.doubleQuote))
+            SqlLexer.Tokens.BACKTICKED_LIT.id -> MasqueradingToken(token,tokenTypeForLit(dialect.backTick))
+            else -> token
+        }
+    }
+
+    private fun tokenTypeForLit(literalType: Dialect.LiteralType): Int {
+        return when (literalType) {
+            Dialect.LiteralType.STRING_LIT -> SqlParser.Tokens.STRING_LITERAL.id
+            Dialect.LiteralType.IDENTIFIER_LIT -> SqlParser.Tokens.IDENTIFIER.id
+        }
     }
 }
