@@ -6,6 +6,7 @@ import sqlparser.Ast.*
 import sqlparser.Ast.Statement.*
 import sqlparser.Ast.Expression.*
 import sqlparser.Ast.Expression.Literal.*
+import sqlparser.Ast.SelectOrUnion.*
 
 class SelectTest {
 
@@ -177,6 +178,50 @@ class SelectTest {
             |    FROM
             |      foobar
             |  ) t;""".trimMargin()
+
+        assertEquals(expected, SqlPrinter.from(parseStatement(statement, true)))
+    }
+
+
+    @Test
+    fun testSelectFromUnion1() {
+        val statement = "Select a from table1 union all Select a from table2;"
+        val expected = SelectStmt(
+                Union(
+                    SelectClause(
+                            listOf(
+                                    NamedExpression(null, Reference(Identifier(null, "a")))
+                            ),
+                            fromItems = listOf(
+                                    DataSource.Table(Identifier(null, "table1"), null)
+                            )
+                    ),
+                    SelectClause(
+                            listOf(
+                                    NamedExpression(null, Reference(Identifier(null, "a")))
+                            ),
+                            fromItems = listOf(
+                                    DataSource.Table(Identifier(null, "table2"), null)
+                            )
+                    ),
+                    true
+                )
+        )
+        assertEquals(expected, parseStatement(statement, true))
+    }
+
+    @Test
+    fun testSelectFromUnion1ToString() {
+        val statement = "Select a from table1 union all Select a from table2;"
+        val expected = """SELECT
+            |  a
+            |FROM
+            |  table1
+            |UNION ALL
+            |SELECT
+            |  a
+            |FROM
+            |  table2;""".trimMargin()
 
         assertEquals(expected, SqlPrinter.from(parseStatement(statement, true)))
     }

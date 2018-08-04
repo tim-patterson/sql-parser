@@ -7,6 +7,7 @@ import org.antlr.v4.kotlinruntime.tree.TerminalNode
 import sqlparser.Ast.*
 import sqlparser.Ast.Expression.*
 import sqlparser.Ast.Expression.Literal.*
+import sqlparser.Ast.SelectOrUnion.*
 
 // Top level parse functions
 fun parseFile(sql: String, strict: Boolean = false, dialect: Dialect = Dialect.DEFAULT): Ast.File {
@@ -98,8 +99,21 @@ private class Parser {
 
     private fun parseSelectStmt(node: SqlParser.SelectStmtContext): Statement.SelectStmt {
         val pos = SourcePosition(node.position)
-        val selectClause = parseSelectClause(node.findSelectClause()!!)
+        val selectClause = parseSelectOrUnion(node.findSelectOrUnion()!!)
         return Statement.SelectStmt(selectClause, pos)
+    }
+
+    private fun parseSelectOrUnion(node: SqlParser.SelectOrUnionContext): SelectOrUnion {
+        val pos = SourcePosition(node.position)
+        return if(node.UNION() != null) {
+            val top = parseSelectOrUnion(node.findSelectOrUnion()!!)
+            val bottom = parseSelectClause(node.findSelectClause()!!)
+            val all = node.ALL() != null
+            Union(top, bottom, all, pos)
+        } else {
+            parseSelectClause(node.findSelectClause()!!)
+        }
+
     }
 
     private fun parseSelectClause(node: SqlParser.SelectClauseContext): SelectClause {
@@ -120,8 +134,8 @@ private class Parser {
                 DataSource.Table(tblIdentifier, alias, pos)
             }
 
-            dataSource.findSelectClause() != null -> {
-                val subQuery = parseSelectClause(dataSource.findSelectClause()!!)
+            dataSource.findSelectOrUnion() != null -> {
+                val subQuery = parseSelectOrUnion(dataSource.findSelectOrUnion()!!)
                 DataSource.SubQuery(subQuery, alias, pos)
             }
 

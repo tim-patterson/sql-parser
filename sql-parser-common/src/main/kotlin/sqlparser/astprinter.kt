@@ -2,6 +2,7 @@ package sqlparser
 
 import sqlparser.Ast.*
 import sqlparser.Ast.Expression.Literal.*
+import sqlparser.Ast.SelectOrUnion.*
 
 open class SqlPrinter {
 
@@ -23,6 +24,7 @@ open class SqlPrinter {
             is NamedExpression -> render(node)
             is OrderExpression -> render(node)
             is SelectClause -> render(node)
+            is Union -> render(node)
             is DataSource -> render(node)
         }
     }
@@ -55,6 +57,11 @@ open class SqlPrinter {
 
     protected open fun render(node: Statement.SelectStmt): String {
         return "${render(node.selectClause)};"
+    }
+
+    protected open fun render(node: Union): String {
+        val all = if(node.all) " ALL" else ""
+        return render(node.top) + "\nUNION" + all + "\n" + render(node.bottom)
     }
 
     protected open fun render(node: SelectClause): String {

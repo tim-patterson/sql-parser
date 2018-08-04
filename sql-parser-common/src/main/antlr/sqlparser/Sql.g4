@@ -39,7 +39,7 @@ createTableStmt
   ;
 
 selectStmt
-  : selectClause
+  : selectOrUnion
   ;
 
 createTableStmtColumnList
@@ -86,6 +86,11 @@ temporary
   | TEMPORARY
   ;
 
+selectOrUnion
+  : selectOrUnion UNION ALL? selectClause
+  | selectClause
+  ;
+
 selectClause
   : SELECT DISTINCT? namedExpression (OP_COMMA namedExpression)*
   fromClause?
@@ -130,7 +135,7 @@ limitClause
 
 dataSource
   : qualifiedIdentifier
-  | OP_OPEN_BRACKET selectClause OP_CLOSE_BRACKET
+  | OP_OPEN_BRACKET selectOrUnion OP_CLOSE_BRACKET
   ;
 
 namedExpression
