@@ -107,6 +107,9 @@ fromClause
 
 fromItem
   : dataSource (AS? simpleIdentifier)?
+  | fromItem (LEFT | RIGHT | FULL)? OUTER JOIN fromItem ON expression
+  | fromItem INNER? JOIN fromItem ON expression
+  | fromItem CROSS JOIN fromItem
   ;
 
 whereClause
@@ -217,6 +220,7 @@ keyword
   | COMMENT
   | CONSTRAINT
   | CREATE
+  | CROSS
   | DATABASE
   | DATE
   | DAY
@@ -334,6 +338,7 @@ CLUSTER: C L U S T E R;
 COMMENT: C O M M E N T;
 CONSTRAINT: C O N S T R A I N T;
 CREATE: C R E A T E;
+CROSS: C R O S S;
 DATABASE: D A T A B A S E;
 DATE: D A T E;
 DAY: D A Y;

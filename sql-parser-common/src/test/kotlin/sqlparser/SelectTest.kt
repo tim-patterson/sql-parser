@@ -90,7 +90,7 @@ class SelectTest {
                             NamedExpression(null, Reference(Identifier(null, "a"))),
                             NamedExpression(null, Reference(Identifier(null, "b")))
                         ),
-                        fromItems = listOf(
+                        fromClause = FromClause(
                                 DataSource.Table(Identifier("mydb", "my_table"), null)
                         )
                 )
@@ -120,7 +120,7 @@ class SelectTest {
                                 NamedExpression(null, Reference(Identifier(null, "a"))),
                                 NamedExpression(null, Reference(Identifier(null, "b")))
                         ),
-                        fromItems = listOf(
+                        fromClause = FromClause(
                                 DataSource.Table(Identifier("mydb", "my_table"), Identifier(null, "t"))
                         )
                 )
@@ -149,13 +149,13 @@ class SelectTest {
                                 NamedExpression(null, Reference(Identifier(null, "a"))),
                                 NamedExpression(null, Reference(Identifier(null, "b")))
                         ),
-                        fromItems = listOf(
+                        fromClause = FromClause(
                                 DataSource.SubQuery(
                                         SelectClause(
                                                 listOf(
                                                         NamedExpression(null, Reference(Identifier(null, "*")))
                                                 ),
-                                                fromItems = listOf(DataSource.Table(Identifier(null, "foobar"),null))
+                                                fromClause = FromClause(DataSource.Table(Identifier(null, "foobar"),null))
                                         ),
                                         Identifier(null, "t")
                                 )
@@ -192,7 +192,7 @@ class SelectTest {
                             listOf(
                                     NamedExpression(null, Reference(Identifier(null, "a")))
                             ),
-                            fromItems = listOf(
+                            fromClause = FromClause(
                                     DataSource.Table(Identifier(null, "table1"), null)
                             )
                     ),
@@ -200,7 +200,7 @@ class SelectTest {
                             listOf(
                                     NamedExpression(null, Reference(Identifier(null, "a")))
                             ),
-                            fromItems = listOf(
+                            fromClause = FromClause(
                                     DataSource.Table(Identifier(null, "table2"), null)
                             )
                     ),

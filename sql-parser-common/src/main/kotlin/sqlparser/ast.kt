@@ -39,20 +39,27 @@ sealed class Ast {
         data class SelectClause(
                 val selectExpressions: List<NamedExpression>,
                 val distinct: Boolean = false,
-                val fromItems: List<DataSource> = listOf(),
+                val fromClause: FromClause? = null,
                 override val sourcePosition: SP = SP()
         ): SelectOrUnion()
 
         data class Union(val top: SelectOrUnion, val bottom: SelectClause, val all: Boolean, override val sourcePosition: SP = SP()): SelectOrUnion()
     }
 
+    data class FromClause(val source: DataSource, override val sourcePosition: SP = SP()): Ast()
+
     sealed class DataSource: Ast() {
         abstract val alias: Identifier?
 
         data class Table(val identifier: Identifier, override val alias: Identifier?, override val sourcePosition: SP = SP()): DataSource()
         data class SubQuery(val subQuery: SelectOrUnion, override val alias: Identifier?, override val sourcePosition: SP = SP()): DataSource()
+        data class Join(val left: DataSource, val right: DataSource, val joinType: JoinType, val onExpression: Expression? = null, override val sourcePosition: SP = SP()): DataSource() {
+            override val alias: Identifier? = null
+        }
     }
 }
+
+enum class JoinType { INNER, FULL_OUTER, CROSS, LEFT_OUTER, RIGHT_OUTER }
 
 // Wrapper class to stop Ast objects using Source position for equality,
 // This makes unit testing etc so much easier as well as comparing subtrees etc

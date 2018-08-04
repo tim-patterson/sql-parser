@@ -120,26 +120,57 @@ private class Parser {
         val pos = SourcePosition(node.position)
         val distinct = node.DISTINCT() != null
         val expressions = node.findNamedExpression().map(::parseNamedExpression)
-        val fromItems = node.findFromClause()?.let { it.findFromItem().map(::parseFromItem) } ?: listOf()
-        return SelectClause(expressions, distinct, fromItems, pos)
+        val fromClause = node.findFromClause()?.let { parseFromClause(it) }
+        return SelectClause(expressions, distinct, fromClause, pos)
+    }
+
+    private fun parseFromClause(node: SqlParser.FromClauseContext): FromClause {
+        val pos = SourcePosition(node.position)
+        val fromItems = node.findFromItem().map(::parseFromItem)
+
+        val source = fromItems.reduce { left, right ->
+            DataSource.Join(left, right, joinType = JoinType.CROSS)
+        }
+        return FromClause(source, pos)
     }
 
     private fun parseFromItem(node: SqlParser.FromItemContext): DataSource {
         val pos = SourcePosition(node.position)
         val alias = node.findSimpleIdentifier()?.let { parseSimpleIdentifier(it) }
-        val dataSource = node.findDataSource()!!
+
         return when {
-            dataSource.findQualifiedIdentifier() != null -> {
-                val tblIdentifier = parseQualifiedIdentifier(dataSource.findQualifiedIdentifier()!!)
-                DataSource.Table(tblIdentifier, alias, pos)
-            }
+            node.findDataSource() != null -> {
+                val dataSource = node.findDataSource()!!
+                when {
+                    dataSource.findQualifiedIdentifier() != null -> {
+                        val tblIdentifier = parseQualifiedIdentifier(dataSource.findQualifiedIdentifier()!!)
+                        DataSource.Table(tblIdentifier, alias, pos)
+                    }
 
-            dataSource.findSelectOrUnion() != null -> {
-                val subQuery = parseSelectOrUnion(dataSource.findSelectOrUnion()!!)
-                DataSource.SubQuery(subQuery, alias, pos)
-            }
+                    dataSource.findSelectOrUnion() != null -> {
+                        val subQuery = parseSelectOrUnion(dataSource.findSelectOrUnion()!!)
+                        DataSource.SubQuery(subQuery, alias, pos)
+                    }
 
-            else -> TODO()
+                    else -> TODO()
+                }
+            }
+            else -> {
+                val left = parseFromItem(node.findFromItem(0)!!)
+                val right = parseFromItem(node.findFromItem(1)!!)
+                val joinType = when {
+                    node.CROSS() != null -> JoinType.CROSS
+                    node.OUTER() != null -> when {
+                        node.LEFT() != null -> JoinType.LEFT_OUTER
+                        node.RIGHT() != null -> JoinType.RIGHT_OUTER
+                        else -> JoinType.FULL_OUTER
+                    }
+                    else -> JoinType.INNER
+                }
+
+                val onExpression = node.findExpression()?.let { parseExpression(it) }
+                DataSource.Join(left, right,joinType, onExpression)
+            }
         }
     }
 

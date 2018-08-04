@@ -24,6 +24,7 @@ open class SqlPrinter {
             is NamedExpression -> render(node)
             is OrderExpression -> render(node)
             is SelectClause -> render(node)
+            is FromClause -> render(node)
             is Union -> render(node)
             is DataSource -> render(node)
         }
@@ -47,6 +48,7 @@ open class SqlPrinter {
         val renderedSource =  when (node) {
             is DataSource.Table -> render(node.identifier)
             is DataSource.SubQuery -> "(\n${render(node.subQuery).prependIndent("  ")}\n)"
+            is DataSource.Join -> render(node)
         }
         return if(node.alias != null){
             renderedSource + " " + render(node.alias!!)
@@ -67,16 +69,39 @@ open class SqlPrinter {
     protected open fun render(node: SelectClause): String {
         val selectExpressions = node.selectExpressions.joinToString(",\n") { render(it) }
         val distinct = if(node.distinct) " DISTINCT" else ""
-        val fromClause = if(node.fromItems.isNotEmpty()) {
-            "\nFROM\n" + node.fromItems.map(::render).joinToString(",\n").prependIndent("  ")
-        } else {
-            ""
-        }
-
+        val fromClause = node.fromClause?.let { "\n" + render(it) } ?: ""
 
         return "SELECT" + distinct + "\n" +
                 selectExpressions.prependIndent("  ") +
                 fromClause
+    }
+
+    protected open fun render(node: FromClause): String {
+        return "FROM\n" + if(node.source is DataSource.Join) {
+            render(node.source)
+        } else {
+            render(node.source).prependIndent("  ")
+        }
+    }
+
+    protected open fun render(node: DataSource.Join): String {
+        val joinType = when(node.joinType) {
+            JoinType.INNER -> "INNER"
+            JoinType.CROSS -> "CROSS"
+            JoinType.FULL_OUTER -> "FULL OUTER"
+            JoinType.LEFT_OUTER -> "LEFT OUTER"
+            JoinType.RIGHT_OUTER -> "RIGHT OUTER"
+        }
+
+        val onClause = node.onExpression?.let { "\nON " + render(it) } ?: ""
+
+        return if(node.left is DataSource.Join) {
+            render(node.left)
+        } else {
+            render(node.left).prependIndent("  ")
+        } + "\n$joinType JOIN\n" +
+                render(node.right).prependIndent("  ") +
+                onClause
     }
 
     protected open fun render(node: NamedExpression): String {
