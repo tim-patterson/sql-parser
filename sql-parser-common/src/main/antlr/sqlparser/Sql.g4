@@ -97,7 +97,11 @@ selectClause
   ;
 
 fromClause
-  : FROM querySource (AS? simpleIdentifier)?
+  : FROM fromItem (OP_COMMA fromItem)*
+  ;
+
+fromItem
+  : dataSource (AS? simpleIdentifier)?
   ;
 
 whereClause
@@ -124,7 +128,7 @@ limitClause
   : LIMIT POSITIVE_INT_LITERAL
   ;
 
-querySource
+dataSource
   : qualifiedIdentifier
   | OP_OPEN_BRACKET selectClause OP_CLOSE_BRACKET
   ;
@@ -176,6 +180,7 @@ qualifiedIdentifier
 simpleIdentifier
   : IDENTIFIER
   | keyword
+  | OP_MULT
   ;
 
 literal

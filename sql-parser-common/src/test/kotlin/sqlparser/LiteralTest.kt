@@ -7,17 +7,25 @@ import kotlin.test.assertEquals
 class LiteralTest {
 
     @Test
-    fun testWrongStringLiteral() {
+    fun testIdentifier() {
         val expression = "\"Hello world\""
         val expected = Ast.Expression.Reference(Ast.Identifier(null,"hello world"))
 
-        assertEquals(expected, parseExpression(expression, true, Dialect.POSTGRES))
+        assertEquals(expected, parseExpression(expression, true))
+    }
+
+    @Test
+    fun testDoubleQuotedHiveStringLiteral() {
+        val expression = "\"Hello world\""
+        val expected = Ast.Expression.Literal.StringLiteral("Hello world")
+
+        assertEquals(expected, parseExpression(expression, true, Dialect.HIVE))
     }
 
 
     @Test
     fun testStringLiteral() {
-        val expression = "\"Hello world\""
+        val expression = "'Hello world'"
         val expected = Ast.Expression.Literal.StringLiteral("Hello world")
 
         assertEquals(expected, parseExpression(expression, true))
@@ -110,7 +118,7 @@ class LiteralTest {
 
     @Test
     fun testDateLiteral() {
-        val expression = "date \"2018-01-01\""
+        val expression = "date \'2018-01-01\'"
         val expected = Ast.Expression.Literal.DateLiteral("2018-01-01")
 
         assertEquals(expected, parseExpression(expression, true))
@@ -118,7 +126,7 @@ class LiteralTest {
 
     @Test
     fun testDateLiteralToString() {
-        val expression = "date \"2018-01-01\""
+        val expression = "date \'2018-01-01\'"
         val expected = "DATE '2018-01-01'"
 
         assertEquals(expected, SqlPrinter.from(parseExpression(expression, true)))

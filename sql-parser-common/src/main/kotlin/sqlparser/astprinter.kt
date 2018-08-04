@@ -23,6 +23,7 @@ open class SqlPrinter {
             is NamedExpression -> render(node)
             is OrderExpression -> render(node)
             is SelectClause -> render(node)
+            is DataSource -> render(node)
         }
     }
 
@@ -36,8 +37,20 @@ open class SqlPrinter {
 
     protected open fun render(node: Statement.CreateTable): String {
         return "CREATE TABLE ${render(node.tableName)} (\n" +
-              node.columns.joinToString(",\n  ", "  ", "\n") { render(it) } +
-                ");"
+              node.columns.joinToString(",\n") { render(it) }.prependIndent("  ") +
+                "\n);"
+    }
+
+    protected open fun render(node: DataSource): String {
+        val renderedSource =  when (node) {
+            is DataSource.Table -> render(node.identifier)
+            is DataSource.SubQuery -> "(\n${render(node.subQuery).prependIndent("  ")}\n)"
+        }
+        return if(node.alias != null){
+            renderedSource + " " + render(node.alias!!)
+        } else {
+            renderedSource
+        }
     }
 
     protected open fun render(node: Statement.SelectStmt): String {
@@ -45,7 +58,18 @@ open class SqlPrinter {
     }
 
     protected open fun render(node: SelectClause): String {
-        return "SELECT " + node.selectExpressions.joinToString{ render(it) }
+        val selectExpressions = node.selectExpressions.joinToString(",\n") { render(it) }
+        val distinct = if(node.distinct) " DISTINCT" else ""
+        val fromClause = if(node.fromItems.isNotEmpty()) {
+            "\nFROM\n" + node.fromItems.map(::render).joinToString(",\n").prependIndent("  ")
+        } else {
+            ""
+        }
+
+
+        return "SELECT" + distinct + "\n" +
+                selectExpressions.prependIndent("  ") +
+                fromClause
     }
 
     protected open fun render(node: NamedExpression): String {
@@ -138,7 +162,6 @@ open class SqlPrinter {
     protected open fun render(node: StringLiteral): String {
         return "\'${node.value.replace("'", "\\'")}\'"
     }
-
 
     open fun render(node: Ast.ColumnDefinition): String {
         return "${render(node.columnName)} ${node.type}"

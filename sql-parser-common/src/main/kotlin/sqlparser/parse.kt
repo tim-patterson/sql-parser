@@ -104,8 +104,29 @@ private class Parser {
 
     private fun parseSelectClause(node: SqlParser.SelectClauseContext): SelectClause {
         val pos = SourcePosition(node.position)
+        val distinct = node.DISTINCT() != null
         val expressions = node.findNamedExpression().map(::parseNamedExpression)
-        return SelectClause(expressions, pos)
+        val fromItems = node.findFromClause()?.let { it.findFromItem().map(::parseFromItem) } ?: listOf()
+        return SelectClause(expressions, distinct, fromItems, pos)
+    }
+
+    private fun parseFromItem(node: SqlParser.FromItemContext): DataSource {
+        val pos = SourcePosition(node.position)
+        val alias = node.findSimpleIdentifier()?.let { parseSimpleIdentifier(it) }
+        val dataSource = node.findDataSource()!!
+        return when {
+            dataSource.findQualifiedIdentifier() != null -> {
+                val tblIdentifier = parseQualifiedIdentifier(dataSource.findQualifiedIdentifier()!!)
+                DataSource.Table(tblIdentifier, alias, pos)
+            }
+
+            dataSource.findSelectClause() != null -> {
+                val subQuery = parseSelectClause(dataSource.findSelectClause()!!)
+                DataSource.SubQuery(subQuery, alias, pos)
+            }
+
+            else -> TODO()
+        }
     }
 
     private fun parseNamedExpression(node: SqlParser.NamedExpressionContext): NamedExpression {
@@ -188,7 +209,7 @@ private class Parser {
 
     private fun parseSimpleIdentifier(node: SqlParser.SimpleIdentifierContext): Ast.Identifier {
         val nodeText = node.text.toLowerCase()
-        val identifier = if(node.IDENTIFIER()!!.symbol is DialectRewriter.MasqueradingToken) {
+        val identifier = if(node.IDENTIFIER()?.symbol is DialectRewriter.MasqueradingToken) {
             nodeText.substring(1, nodeText.length - 1)
         } else {
             nodeText

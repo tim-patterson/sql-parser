@@ -34,7 +34,19 @@ sealed class Ast {
 
     data class NamedExpression(val name: String?, val expression: Expression, override val sourcePosition: SP = SP()): Ast()
     data class OrderExpression(val expression: Expression, val asc: Boolean = true, override val sourcePosition: SP = SP()): Ast()
-    data class SelectClause(val selectExpressions: List<NamedExpression>, override val sourcePosition: SP = SP()): Ast()
+    data class SelectClause(
+            val selectExpressions: List<NamedExpression>,
+            val distinct: Boolean = false,
+            val fromItems: List<DataSource> = listOf(),
+            override val sourcePosition: SP = SP()
+    ): Ast()
+
+    sealed class DataSource: Ast() {
+        abstract val alias: Identifier?
+
+        data class Table(val identifier: Identifier, override val alias: Identifier?, override val sourcePosition: SP = SP()): DataSource()
+        data class SubQuery(val subQuery: SelectClause, override val alias: Identifier?, override val sourcePosition: SP = SP()): DataSource()
+    }
 }
 
 // Wrapper class to stop Ast objects using Source position for equality,
