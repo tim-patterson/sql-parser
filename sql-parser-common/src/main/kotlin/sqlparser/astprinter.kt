@@ -143,7 +143,10 @@ open class SqlPrinter {
                 }
             }
 
-            if (args.size == 1) {
+            if (node.functionName == "IN" || node.functionName == "NOT IN") {
+                // special case for IN/NOT IN
+                "${args[0]} ${node.functionName} (${args.drop(1).joinToString()})"
+            } else if (args.size == 1) {
                 // special case for unitary minus
                 "${node.functionName} ${args[0]}"
             } else {

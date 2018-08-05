@@ -211,6 +211,11 @@ private class Parser {
             node.OP_LT() != null -> FunctionCall("<", subExpressions, true, pos)
             node.OP_LTE() != null -> FunctionCall("<=", subExpressions, true, pos)
             node.OP_NEQ() != null -> FunctionCall("!=", subExpressions, true, pos)
+            node.IN() != null -> if (node.NOT() != null) {
+                FunctionCall("NOT IN", subExpressions, true, pos)
+            } else {
+                FunctionCall("IN", subExpressions, true, pos)
+            }
             node.NOT() != null -> FunctionCall("IS NOT NULL", subExpressions, true, pos)
             node.NULL() != null -> FunctionCall("IS NULL", subExpressions, true, pos)
             node.findQualifiedIdentifier() != null -> {

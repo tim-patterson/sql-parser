@@ -164,6 +164,7 @@ expression
   | expression IS NULL
   | expression IS NOT NULL
   | expression ( AND | OR ) expression
+  | expression NOT? IN OP_OPEN_BRACKET expression (OP_COMMA expression)* OP_CLOSE_BRACKET
   | literal
   | qualifiedIdentifier
   | functionCall
