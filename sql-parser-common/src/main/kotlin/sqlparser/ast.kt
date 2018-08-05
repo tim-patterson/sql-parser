@@ -30,6 +30,10 @@ sealed class Ast {
         }
         data class FunctionCall(val functionName: String, val args: List<Expression>, val infix: Boolean=false, override val sourcePosition: SP = SP()): Expression()
         data class Reference(val identifier: Ast.Identifier, override val sourcePosition: SP = SP()): Expression()
+        data class Case(val inputExpression: Expression?,
+                        val matchExpressions: List<Pair<Expression, Expression>>,
+                        val elseExpression: Expression?, override val sourcePosition: SP = SP()): Expression()
+        data class Cast(val expression: Expression, val dataType: String, override val sourcePosition: SP = SP()): Expression()
     }
 
     data class NamedExpression(val name: String?, val expression: Expression, override val sourcePosition: SP = SP()): Ast()

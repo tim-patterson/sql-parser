@@ -9,6 +9,7 @@ open class SqlPrinter {
     protected open val operatorPrecedences = mapOf(
             "*" to 10,
             "/" to 10,
+            "%" to 10,
             "+" to 9,
             "-" to 9,
             ">" to 8,
@@ -154,11 +155,25 @@ open class SqlPrinter {
             is Expression.Literal -> render(node)
             is Expression.Reference -> render(node)
             is Expression.FunctionCall -> render(node)
+            is Expression.Case -> render(node)
+            is Expression.Cast -> render(node)
         }
+    }
+
+    protected open fun render(node: Expression.Cast): String {
+        return "CAST(${render(node.expression)} AS ${node.dataType})"
     }
 
     protected open fun render(node: Expression.Reference): String {
         return render(node.identifier)
+    }
+
+    protected open fun render(node: Expression.Case): String {
+        val inputExpression = node.inputExpression?.let { " ${render(it)}" } ?: ""
+        return "CASE$inputExpression\n" +
+                node.matchExpressions.joinToString("") { (a, b) -> "  WHEN ${render(a)} THEN ${render(b)}\n" } +
+                (node.elseExpression?.let { "  ELSE ${render(it)}\n" } ?: "") +
+                "END"
     }
 
     protected open fun render(node: Expression.FunctionCall): String {
@@ -197,6 +212,10 @@ open class SqlPrinter {
                 "$left ${node.functionName} $right"
             }
 
+        } else if (node.functionName == "ARRAY" ) {
+            // Special case for array constructor used by presto
+            val args = rawArgs.map(::render)
+            "ARRAY[${args.joinToString()}]"
         } else {
             val args = rawArgs.map(::render)
             "${node.functionName}(${args.joinToString()})"

@@ -164,4 +164,87 @@ class ExpressionTest {
 
         assertEquals(expected, SqlPrinter.from(parseExpression(expression, true)))
     }
+
+    @Test
+    fun testArrayConstructor() {
+        val expression = "array[1,2,3]"
+        val expected = FunctionCall("ARRAY", listOf(
+                IntLiteral(1), IntLiteral(2), IntLiteral(3)
+        ))
+
+        assertEquals(expected, parseExpression(expression, true))
+    }
+
+    @Test
+    fun testArrayConstructorString() {
+        val expression = "array[1,2,3]"
+        val expected = "ARRAY[1, 2, 3]"
+
+        assertEquals(expected, SqlPrinter.from(parseExpression(expression, true)))
+    }
+
+    @Test
+    fun testCase1() {
+        val expression = "case when a then 1 when b then 2 else 3 end"
+        val expected = Case(null, listOf(
+                Reference(Ast.Identifier(null, "a")) to IntLiteral(1),
+                Reference(Ast.Identifier(null, "b")) to IntLiteral(2)
+        ), IntLiteral(3))
+
+        assertEquals(expected, parseExpression(expression, true))
+    }
+
+    @Test
+    fun testCase1String() {
+        val expression = "case when a then 1 when b then 2 else 3 end"
+        val expected = """CASE
+            |  WHEN a THEN 1
+            |  WHEN b THEN 2
+            |  ELSE 3
+            |END
+        """.trimMargin()
+
+        assertEquals(expected, SqlPrinter.from(parseExpression(expression, true)))
+    }
+
+    @Test
+    fun testCase2() {
+        val expression = "case foo when a then 1 when b then 2 else 3 end"
+        val expected = Case(Reference(Ast.Identifier(null, "foo")), listOf(
+                Reference(Ast.Identifier(null, "a")) to IntLiteral(1),
+                Reference(Ast.Identifier(null, "b")) to IntLiteral(2)
+        ), IntLiteral(3))
+
+        assertEquals(expected, parseExpression(expression, true))
+    }
+
+    @Test
+    fun testCase2String() {
+        val expression = "case foo when a then 1 when b then 2 else 3 end"
+        val expected = """CASE foo
+            |  WHEN a THEN 1
+            |  WHEN b THEN 2
+            |  ELSE 3
+            |END
+        """.trimMargin()
+
+        assertEquals(expected, SqlPrinter.from(parseExpression(expression, true)))
+    }
+
+    @Test
+    fun testCast() {
+        val expression = "cast('2018-01-01' as date)"
+        val expected = Cast(Literal.StringLiteral("2018-01-01"), "DATE")
+
+        assertEquals(expected, parseExpression(expression, true))
+    }
+
+    @Test
+    fun testCastToString() {
+        val expression = "cast('2018-01-01' as date)"
+        val expected = "CAST('2018-01-01' AS DATE)"
+
+        assertEquals(expected, SqlPrinter.from(parseExpression(expression, true)))
+    }
+
 }

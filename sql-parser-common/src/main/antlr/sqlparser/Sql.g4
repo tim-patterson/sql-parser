@@ -86,13 +86,22 @@ temporary
   | TEMPORARY
   ;
 
+withClause
+  : WITH withClauseItem (OP_COMMA withClauseItem)*
+  ;
+
+withClauseItem
+  : simpleIdentifier AS OP_OPEN_BRACKET selectOrUnion OP_CLOSE_BRACKET
+  ;
+
 selectOrUnion
   : selectOrUnion UNION ALL? selectClause
   | selectClause
   ;
 
 selectClause
-  : SELECT DISTINCT? namedExpression (OP_COMMA namedExpression)*
+  : withClause?
+  SELECT DISTINCT? namedExpression (OP_COMMA namedExpression)*
   fromClause?
   whereClause?
   groupByClause?
@@ -150,14 +159,10 @@ ifNotExists
   : IF NOT EXISTS
   ;
 
-ifExists
-  : IF EXISTS
-  ;
-
 expression
   : OP_OPEN_BRACKET expression OP_CLOSE_BRACKET
   | OP_MINUS expression
-  | expression ( OP_MULT | OP_DIV ) expression
+  | expression ( OP_MULT | OP_DIV | OP_MOD ) expression
   | expression ( OP_PLUS | OP_MINUS ) expression
   | expression ( OP_GT | OP_GTE | OP_LT | OP_LTE | OP_EQ | OP_NEQ ) expression
   | expression IS NULL
@@ -167,6 +172,25 @@ expression
   | literal
   | qualifiedIdentifier
   | functionCall
+  | caseStatement
+  | cast
+  | ARRAY OP_OPEN_SQUARE (expression (OP_COMMA expression)*)? OP_CLOSE_SQUARE
+  ;
+
+cast
+  : CAST OP_OPEN_BRACKET expression AS dataType OP_CLOSE_BRACKET
+  ;
+
+caseStatement
+  : CASE expression? caseStatementMatch* caseStatementElse? END
+  ;
+
+caseStatementMatch
+  : WHEN expression THEN expression
+  ;
+
+caseStatementElse
+  : ELSE expression
   ;
 
 functionCall
@@ -453,7 +477,10 @@ OP_COMMA: ',';
 OP_CONCAT: '||';
 OP_OPEN_BRACKET: '(';
 OP_CLOSE_BRACKET: ')';
+OP_OPEN_SQUARE: '[';
+OP_CLOSE_SQUARE: ']';
 OP_COLON: ':';
+OP_MOD: '%';
 
 IDENTIFIER
  : [a-zA-Z_] [a-zA-Z_0-9]*

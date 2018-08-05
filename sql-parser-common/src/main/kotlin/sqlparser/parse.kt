@@ -36,7 +36,7 @@ private fun String.parser(dialect: Dialect, strict: Boolean = false): SqlParser 
 
 private object ThrowingErrorListener : BaseErrorListener() {
     override fun syntaxError(recognizer: Recognizer<*, *>, offendingSymbol: Any?, line: Int, charPositionInLine: Int, msg: String, e: RecognitionException?) {
-        // println("line $line:$charPositionInLine $msg")
+        println("line $line:$charPositionInLine $msg")
         throw ParseCancellationException("line $line:$charPositionInLine $msg")
     }
 }
@@ -196,13 +196,16 @@ private class Parser {
     private fun parseColumnDefinition(node: SqlParser.CreateTableStmtColumnSpecContext): ColumnDefinition {
         val pos = SourcePosition(node.position)
         val columnName = parseSimpleIdentifier(node.findSimpleIdentifier()!!)
-        val dataTypeNode = node.findDataType()!!
-        val dataType = if (dataTypeNode.INTERVAL() != null) {
-            dataTypeNode.children!!.joinToString(" ") { it.text }.toUpperCase()
-        } else {
-            dataTypeNode.text.toUpperCase()
-        }
+        val dataType = parseDataType(node.findDataType()!!)
         return Ast.ColumnDefinition(columnName, dataType, pos)
+    }
+
+    private fun parseDataType(node: SqlParser.DataTypeContext): String {
+        return if (node.INTERVAL() != null) {
+            node.children!!.joinToString(" ") { it.text }.toUpperCase()
+        } else {
+            node.text.toUpperCase()
+        }
     }
 
 
@@ -223,6 +226,8 @@ private class Parser {
             node.OP_LT() != null -> FunctionCall("<", subExpressions, true, pos)
             node.OP_LTE() != null -> FunctionCall("<=", subExpressions, true, pos)
             node.OP_NEQ() != null -> FunctionCall("!=", subExpressions, true, pos)
+            node.OP_MOD() != null -> FunctionCall("%", subExpressions, true, pos)
+            node.findCaseStatement() != null -> parseCase(node.findCaseStatement()!!)
             node.IN() != null -> if (node.NOT() != null) {
                 FunctionCall("NOT IN", subExpressions, true, pos)
             } else {
@@ -233,6 +238,11 @@ private class Parser {
             node.findQualifiedIdentifier() != null -> {
                 Reference(parseQualifiedIdentifier(node.findQualifiedIdentifier()!!), pos)
             }
+            node.findCast() != null -> Cast(parseExpression(node.findCast()!!.findExpression()!!), parseDataType(node.findCast()!!.findDataType()!!), pos)
+            node.ARRAY() != null -> {
+                // Special array constructor used by presto etc
+                Ast.Expression.FunctionCall("ARRAY", subExpressions, sourcePosition = pos)
+            }
             node.findFunctionCall() != null -> {
                 val functionCall = node.findFunctionCall()!!
                 val args = functionCall.findExpression().map(::parseExpression)
@@ -242,6 +252,16 @@ private class Parser {
             node.OP_OPEN_BRACKET() != null -> subExpressions.single()
             else -> TODO("Can't parse expression ${node.text}")
         }
+    }
+
+    private fun parseCase(node: SqlParser.CaseStatementContext): Case {
+        val pos = SourcePosition(node.position)
+        val inputExpression = node.findExpression()?.let { parseExpression(it) }
+        val elseExpression = node.findCaseStatementElse()?.let { parseExpression(it.findExpression()!!) }
+        val cases = node.findCaseStatementMatch().map {
+            parseExpression(it.findExpression(0)!!) to parseExpression(it.findExpression(1)!!)
+        }
+        return Case(inputExpression, cases, elseExpression, pos)
     }
 
     private fun parseLiteral(node: SqlParser.LiteralContext): Literal {
