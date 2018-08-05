@@ -226,5 +226,63 @@ class SelectTest {
         assertEquals(expected, SqlPrinter.from(parseStatement(statement, true)))
     }
 
+    @Test
+    fun testSelectWithCte() {
+        val statement = "with foo as (select 1 as a) Select a from foo;"
 
+        val cte = DataSource.SubQuery(SelectClause(
+                listOf(
+                        NamedExpression("a", IntLiteral(1))
+                )
+        ), Identifier(null, "foo"))
+
+        val expected = SelectStmt(
+                SelectClause(
+                        listOf(
+                                NamedExpression(null, Reference(Identifier(null, "a")))
+                        ),
+                        fromClause = FromClause(
+                                DataSource.Table(Identifier(null, "foo"), null)
+                        ),
+                        ctes = listOf(cte)
+                )
+        )
+        assertEquals(expected, parseStatement(statement, true))
+    }
+
+    @Test
+    fun testSelectWithCteToString() {
+        val statement = "with foo as (select 1 as a) Select a from foo;"
+        val expected = """WITH foo AS (
+            |  SELECT
+            |    1 AS a
+            |)
+            |
+            |SELECT
+            |  a
+            |FROM
+            |  foo;""".trimMargin()
+
+        assertEquals(expected, SqlPrinter.from(parseStatement(statement, true)))
+    }
+
+    @Test
+    fun testSelectWith2CteToString() {
+        val statement = "with foo as (select 1 as a), bar as (select a+ 1 as b) Select b from bar;"
+        val expected = """WITH foo AS (
+            |  SELECT
+            |    1 AS a
+            |),
+            |bar AS (
+            |  SELECT
+            |    a + 1 AS b
+            |)
+            |
+            |SELECT
+            |  b
+            |FROM
+            |  bar;""".trimMargin()
+
+        assertEquals(expected, SqlPrinter.from(parseStatement(statement, true)))
+    }
 }

@@ -86,6 +86,11 @@ open class SqlPrinter {
     }
 
     protected open fun render(node: SelectClause): String {
+        val ctes = if (node.ctes.isNotEmpty()) {
+            "WITH " + node.ctes.joinToString(",\n") {
+                "${render(it.alias!!)} AS (\n${render(it.subQuery).prependIndent("  ")}\n)"
+            } + "\n\n"
+        } else ""
         val selectExpressions = node.selectExpressions.joinToString(",\n") { render(it) }
         val distinct = if(node.distinct) " DISTINCT" else ""
         val fromClause = node.fromClause?.let { "\n" + render(it) } ?: ""
@@ -99,7 +104,8 @@ open class SqlPrinter {
         } else ""
         val limitClause = node.limit?.let { "\nLIMIT $it" } ?: ""
 
-        return "SELECT" + distinct + "\n" +
+        return  ctes +
+                "SELECT" + distinct + "\n" +
                 selectExpressions.prependIndent("  ") +
                 fromClause +
                 whereClause +

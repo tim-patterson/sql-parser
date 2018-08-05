@@ -118,6 +118,14 @@ private class Parser {
 
     private fun parseSelectClause(node: SqlParser.SelectClauseContext): SelectClause {
         val pos = SourcePosition(node.position)
+        val ctes = node.findWithClause()?.let {
+            it.findWithClauseItem().map {
+                val pos = SourcePosition(it.position)
+                val alias = parseSimpleIdentifier(it.findSimpleIdentifier()!!)
+                val subSelect = parseSelectOrUnion(it.findSelectOrUnion()!!)
+                DataSource.SubQuery(subSelect, alias, pos)
+            }
+        } ?: listOf()
         val distinct = node.DISTINCT() != null
         val expressions = node.findNamedExpression().map(::parseNamedExpression)
         val fromClause = node.findFromClause()?.let { parseFromClause(it) }
@@ -126,7 +134,7 @@ private class Parser {
         val having = node.findHavingClause()?.let { parseExpression(it.findExpression()!!) }
         val orderBy = node.findOrderByClause()?.let { it.findOrderByExpression().map(::parseOrderExpression) } ?: listOf()
         val limit = node.findLimitClause()?.let { it.POSITIVE_INT_LITERAL()!!.text.toInt() }
-        return SelectClause(expressions, distinct, fromClause, predicate, groupBy, having, orderBy, limit, pos)
+        return SelectClause(expressions, distinct, fromClause, predicate, groupBy, having, orderBy, limit, ctes, pos)
     }
 
     private fun parseFromClause(node: SqlParser.FromClauseContext): FromClause {

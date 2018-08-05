@@ -49,6 +49,7 @@ sealed class Ast {
                 val havingPredicate: Expression? = null,
                 val orderByExpressions: List<OrderExpression> = listOf(),
                 val limit: Int? = null,
+                val ctes: List<DataSource.SubQuery> = listOf(),
                 override val sourcePosition: SP = SP()
         ): SelectOrUnion()
 
