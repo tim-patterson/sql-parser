@@ -40,6 +40,7 @@ sealed class Ast {
                 val selectExpressions: List<NamedExpression>,
                 val distinct: Boolean = false,
                 val fromClause: FromClause? = null,
+                val predicate: Expression? = null,
                 override val sourcePosition: SP = SP()
         ): SelectOrUnion()
 

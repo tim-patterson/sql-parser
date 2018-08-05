@@ -23,7 +23,7 @@ class ExpressionTest {
     @Test
     fun testBasicMathsToString() {
         val expression = "1 * 2 + 3 / 4"
-        val expected = "(1 * 2) + (3 / 4)"
+        val expected = "1 * 2 + 3 / 4"
 
         assertEquals(expected, SqlPrinter.from(parseExpression(expression, true)))
     }
@@ -141,7 +141,26 @@ class ExpressionTest {
     @Test
     fun testNotInToString() {
         val expression = "1+ 2 not in(1,2,3)"
-        val expected = "(1 + 2) NOT IN (1, 2, 3)"
+        val expected = "1 + 2 NOT IN (1, 2, 3)"
+
+        assertEquals(expected, SqlPrinter.from(parseExpression(expression, true)))
+    }
+
+    @Test
+    fun testAndOr() {
+        val expression = "1 = 3 and 2 < 4"
+        val expected = FunctionCall("AND", listOf(
+                FunctionCall("=", listOf(IntLiteral(1), IntLiteral(3)), true),
+                FunctionCall("<", listOf(IntLiteral(2), IntLiteral(4)), true)
+        ), infix = true)
+
+        assertEquals(expected, parseExpression(expression, true))
+    }
+
+    @Test
+    fun testAndOrString() {
+        val expression = "1 = 3 and 2 < 4"
+        val expected = "1 = 3 AND 2 < 4"
 
         assertEquals(expected, SqlPrinter.from(parseExpression(expression, true)))
     }

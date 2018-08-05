@@ -121,7 +121,8 @@ private class Parser {
         val distinct = node.DISTINCT() != null
         val expressions = node.findNamedExpression().map(::parseNamedExpression)
         val fromClause = node.findFromClause()?.let { parseFromClause(it) }
-        return SelectClause(expressions, distinct, fromClause, pos)
+        val predicate = node.findWhereClause()?.findExpression()?.let { parseExpression(it) }
+        return SelectClause(expressions, distinct, fromClause, predicate, pos)
     }
 
     private fun parseFromClause(node: SqlParser.FromClauseContext): FromClause {

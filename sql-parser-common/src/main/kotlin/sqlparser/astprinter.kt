@@ -6,6 +6,24 @@ import sqlparser.Ast.SelectOrUnion.*
 
 open class SqlPrinter {
 
+    protected open val operatorPrecedences = mapOf(
+            "*" to 10,
+            "/" to 10,
+            "+" to 9,
+            "-" to 9,
+            ">" to 8,
+            ">=" to 8,
+            "<" to 8,
+            "<=" to 8,
+            "=" to 8,
+            "!=" to 8,
+            "IS NULL" to 8,
+            "IS NOT NULL" to 8,
+            "IN" to 8,
+            "NOT IN" to 8,
+            "AND" to 7,
+            "OR" to 6)
+
     companion object {
         fun from(ast: Ast): String {
             return SqlPrinter().render(ast)
@@ -70,10 +88,12 @@ open class SqlPrinter {
         val selectExpressions = node.selectExpressions.joinToString(",\n") { render(it) }
         val distinct = if(node.distinct) " DISTINCT" else ""
         val fromClause = node.fromClause?.let { "\n" + render(it) } ?: ""
+        val whereClause = node.predicate?.let { "\nWHERE\n  " + render(it)} ?: ""
 
         return "SELECT" + distinct + "\n" +
                 selectExpressions.prependIndent("  ") +
-                fromClause
+                fromClause +
+                whereClause
     }
 
     protected open fun render(node: FromClause): String {
@@ -133,10 +153,22 @@ open class SqlPrinter {
         val rawArgs = node.args
 
         return if(node.infix) {
-            // For each of the args if its another infix function then we need to wrap in
-            // brackets
-            val args = rawArgs.map {
-                if (it is Expression.FunctionCall && it.infix) {
+            // If the left expression is an infix function at a lower precedence
+            // then we need to wrap it in brackets.
+            // If the right expression is an infix function at a lower or the same precedence
+            // then we need to wrap it in brackets
+            val precedence = operatorPrecedences.getOrElse(node.functionName) { 100 }
+            val left = rawArgs[0].let {
+                if (it is Expression.FunctionCall &&
+                        operatorPrecedences.getOrElse(it.functionName) { 0 } < precedence) {
+                    "(${render(it)})"
+                } else {
+                    render(it)
+                }
+            }
+            val right = rawArgs.getOrNull(1)?.let {
+                if (it is Expression.FunctionCall &&
+                        operatorPrecedences.getOrElse(it.functionName) { 0 } <= precedence) {
                     "(${render(it)})"
                 } else {
                     render(it)
@@ -145,12 +177,12 @@ open class SqlPrinter {
 
             if (node.functionName == "IN" || node.functionName == "NOT IN") {
                 // special case for IN/NOT IN
-                "${args[0]} ${node.functionName} (${args.drop(1).joinToString()})"
-            } else if (args.size == 1) {
+                "$left ${node.functionName} (${rawArgs.drop(1).joinToString { render(it) }})"
+            } else if (rawArgs.size == 1) {
                 // special case for unitary minus
-                "${node.functionName} ${args[0]}"
+                "${node.functionName} $left"
             } else {
-                "${args[0]} ${node.functionName} ${args[1]}"
+                "$left ${node.functionName} $right"
             }
 
         } else {
