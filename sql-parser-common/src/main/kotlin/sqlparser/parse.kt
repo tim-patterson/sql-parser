@@ -122,7 +122,11 @@ private class Parser {
         val expressions = node.findNamedExpression().map(::parseNamedExpression)
         val fromClause = node.findFromClause()?.let { parseFromClause(it) }
         val predicate = node.findWhereClause()?.findExpression()?.let { parseExpression(it) }
-        return SelectClause(expressions, distinct, fromClause, predicate, pos)
+        val groupBy = node.findGroupByClause()?.let { it.findExpression().map(::parseExpression) } ?: listOf()
+        val having = node.findHavingClause()?.let { parseExpression(it.findExpression()!!) }
+        val orderBy = node.findOrderByClause()?.let { it.findOrderByExpression().map(::parseOrderExpression) } ?: listOf()
+        val limit = node.findLimitClause()?.let { it.POSITIVE_INT_LITERAL()!!.text.toInt() }
+        return SelectClause(expressions, distinct, fromClause, predicate, groupBy, having, orderBy, limit, pos)
     }
 
     private fun parseFromClause(node: SqlParser.FromClauseContext): FromClause {
@@ -180,6 +184,13 @@ private class Parser {
         val expression = parseExpression(node.findExpression()!!)
         val name = node.findSimpleIdentifier()?.let { parseSimpleIdentifier(it).identifier }
         return NamedExpression(name, expression, pos)
+    }
+
+    private fun parseOrderExpression(node: SqlParser.OrderByExpressionContext): OrderExpression {
+        val pos = SourcePosition(node.position)
+        val expression = parseExpression(node.findExpression()!!)
+        val asc = node.DESC() == null
+        return OrderExpression(expression, asc, pos)
     }
 
     private fun parseColumnDefinition(node: SqlParser.CreateTableStmtColumnSpecContext): ColumnDefinition {

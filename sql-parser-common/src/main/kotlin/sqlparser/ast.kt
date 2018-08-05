@@ -41,6 +41,10 @@ sealed class Ast {
                 val distinct: Boolean = false,
                 val fromClause: FromClause? = null,
                 val predicate: Expression? = null,
+                val groupByExpressions: List<Expression> = listOf(),
+                val havingPredicate: Expression? = null,
+                val orderByExpressions: List<OrderExpression> = listOf(),
+                val limit: Int? = null,
                 override val sourcePosition: SP = SP()
         ): SelectOrUnion()
 

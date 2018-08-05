@@ -89,11 +89,23 @@ open class SqlPrinter {
         val distinct = if(node.distinct) " DISTINCT" else ""
         val fromClause = node.fromClause?.let { "\n" + render(it) } ?: ""
         val whereClause = node.predicate?.let { "\nWHERE\n  " + render(it)} ?: ""
+        val groupByClause = if(node.groupByExpressions.isNotEmpty()) {
+            "\nGROUP BY\n" + node.groupByExpressions.joinToString(",\n") { render(it) }.prependIndent("  ")
+        } else ""
+        val havingClause = node.havingPredicate?.let { "\nHAVING\n  " + render(it)} ?: ""
+        val orderByClause = if(node.orderByExpressions.isNotEmpty()) {
+            "\nORDER BY\n" + node.orderByExpressions.joinToString(",\n") { render(it) }.prependIndent("  ")
+        } else ""
+        val limitClause = node.limit?.let { "\nLIMIT $it" } ?: ""
 
         return "SELECT" + distinct + "\n" +
                 selectExpressions.prependIndent("  ") +
                 fromClause +
-                whereClause
+                whereClause +
+                groupByClause +
+                havingClause +
+                orderByClause +
+                limitClause
     }
 
     protected open fun render(node: FromClause): String {
@@ -159,7 +171,7 @@ open class SqlPrinter {
             // then we need to wrap it in brackets
             val precedence = operatorPrecedences.getOrElse(node.functionName) { 100 }
             val left = rawArgs[0].let {
-                if (it is Expression.FunctionCall &&
+                if (it is Expression.FunctionCall && it.infix &&
                         operatorPrecedences.getOrElse(it.functionName) { 0 } < precedence) {
                     "(${render(it)})"
                 } else {
@@ -167,7 +179,7 @@ open class SqlPrinter {
                 }
             }
             val right = rawArgs.getOrNull(1)?.let {
-                if (it is Expression.FunctionCall &&
+                if (it is Expression.FunctionCall && it.infix &&
                         operatorPrecedences.getOrElse(it.functionName) { 0 } <= precedence) {
                     "(${render(it)})"
                 } else {

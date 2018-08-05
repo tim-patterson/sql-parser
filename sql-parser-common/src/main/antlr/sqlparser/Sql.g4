@@ -117,7 +117,7 @@ whereClause
   ;
 
 groupByClause
-  : GROUP BY expression (OP_COMMA expression)
+  : GROUP BY expression (OP_COMMA expression)*
   ;
 
 havingClause
@@ -125,7 +125,7 @@ havingClause
   ;
 
 orderByClause
-  : ORDER BY orderByExpression (OP_COMMA orderByExpression)
+  : ORDER BY orderByExpression (OP_COMMA orderByExpression)*
   ;
 
 orderByExpression
