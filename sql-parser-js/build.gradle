@@ -29,7 +29,7 @@ dependencies {
 }
 
 kotlinFrontend {
-    downloadNodeJsVersion = "10.8.0"
+    downloadNodeJsVersion = "8.11.3"
 
     npm {
         devDependency("karma")
