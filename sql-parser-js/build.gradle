@@ -5,7 +5,7 @@ buildscript {
         maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
     }
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-frontend-plugin:0.0.33"
+        classpath "org.jetbrains.kotlin:kotlin-frontend-plugin:0.0.36"
     }
 }
 
@@ -29,7 +29,7 @@ dependencies {
 }
 
 kotlinFrontend {
-    downloadNodeJsVersion = "10.6.0"
+    downloadNodeJsVersion = "10.8.0"
 
     npm {
         devDependency("karma")
