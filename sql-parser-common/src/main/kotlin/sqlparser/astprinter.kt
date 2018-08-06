@@ -68,12 +68,17 @@ open class SqlPrinter {
             is DataSource.Table -> render(node.identifier)
             is DataSource.SubQuery -> "(\n${render(node.subQuery).prependIndent("  ")}\n)"
             is DataSource.Join -> render(node)
+            is DataSource.TableFunction -> return render(node)
         }
         return if(node.alias != null){
             renderedSource + " " + render(node.alias!!)
         } else {
             renderedSource
         }
+    }
+
+    protected open fun render(node: DataSource.TableFunction): String {
+        return "${render(node.function)} AS ${render(node.alias!!)} (${node.columnAliases.joinToString { render(it) }})"
     }
 
     protected open fun render(node: Statement.SelectStmt): String {
@@ -211,11 +216,11 @@ open class SqlPrinter {
             if (node.functionName == "IN" || node.functionName == "NOT IN") {
                 // special case for IN/NOT IN
                 "$left ${node.functionName} (${rawArgs.drop(1).joinToString { render(it) }})"
-            } else if (rawArgs.size == 1) {
+            } else if (rawArgs.size == 1 && node.functionName == "-") {
                 // special case for unitary minus
-                "${node.functionName} $left"
+                "- $left"
             } else {
-                "$left ${node.functionName} $right"
+                "$left ${node.functionName}" + (right?.let { " $it" } ?: "")
             }
 
         } else if (node.functionName == "ARRAY" ) {

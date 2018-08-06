@@ -119,6 +119,15 @@ fromItem
   | fromItem (LEFT | RIGHT | FULL)? OUTER JOIN fromItem ON expression
   | fromItem INNER? JOIN fromItem ON expression
   | fromItem CROSS JOIN fromItem
+  | tableFunction
+  ;
+
+tableFunction
+  : functionCall AS? simpleIdentifier tableFunctionColumnAliases
+  ;
+
+tableFunctionColumnAliases
+  : OP_OPEN_BRACKET simpleIdentifier (OP_COMMA simpleIdentifier)* OP_CLOSE_BRACKET
   ;
 
 whereClause

@@ -285,4 +285,38 @@ class SelectTest {
 
         assertEquals(expected, SqlPrinter.from(parseStatement(statement, true)))
     }
+
+    @Test
+    fun testSelectWithTableGeneratingFunction() {
+        val statement = "Select a from table_func(1) foo (a);"
+
+
+        val expected = SelectStmt(
+                SelectClause(
+                        listOf(
+                                NamedExpression(null, Reference(Identifier(null, "a")))
+                        ),
+                        fromClause = FromClause(
+                                DataSource.TableFunction(
+                                        FunctionCall("table_func", listOf(IntLiteral(1))),
+                                        Identifier(null, "foo"),
+                                        listOf(Identifier(null, "a"))
+                                )
+                        )
+                )
+        )
+        assertEquals(expected, parseStatement(statement, true))
+    }
+
+    @Test
+    fun testSelectWithTableGeneratingFunctionToString() {
+        val statement = "Select a from table_func(1) foo (a);"
+        val expected = """SELECT
+            |  a
+            |FROM
+            |  table_func(1) AS foo (a);""".trimMargin()
+
+        assertEquals(expected, SqlPrinter.from(parseStatement(statement, true)))
+    }
+
 }

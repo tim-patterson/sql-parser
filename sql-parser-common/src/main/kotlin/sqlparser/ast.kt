@@ -66,6 +66,12 @@ sealed class Ast {
         data class Join(val left: DataSource, val right: DataSource, val joinType: JoinType, val onExpression: Expression? = null, override val sourcePosition: SP = SP()): DataSource() {
             override val alias: Identifier? = null
         }
+        data class TableFunction(
+                val function: Expression.FunctionCall,
+                override val alias: Identifier?,
+                val columnAliases: List<Identifier>,
+                override val sourcePosition: SP = SP()
+        ): DataSource()
     }
 }
 

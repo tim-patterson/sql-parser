@@ -152,6 +152,16 @@ private class Parser {
         val alias = node.findSimpleIdentifier()?.let { parseSimpleIdentifier(it) }
 
         return when {
+            node.findTableFunction() != null -> {
+                val tableFunction = node.findTableFunction()!!
+                val tableAlias = parseSimpleIdentifier(tableFunction.findSimpleIdentifier()!!)
+                val function = parseFunctionCall(tableFunction.findFunctionCall()!!)
+                val columnIdentifiers = tableFunction.findTableFunctionColumnAliases()!!.findSimpleIdentifier().map {
+                    parseSimpleIdentifier(it)
+                }
+                DataSource.TableFunction(function, tableAlias, columnIdentifiers, pos)
+            }
+
             node.findDataSource() != null -> {
                 val dataSource = node.findDataSource()!!
                 when {
@@ -168,6 +178,7 @@ private class Parser {
                     else -> TODO()
                 }
             }
+
             else -> {
                 val left = parseFromItem(node.findFromItem(0)!!)
                 val right = parseFromItem(node.findFromItem(1)!!)
@@ -251,15 +262,17 @@ private class Parser {
                 // Special array constructor used by presto etc
                 Ast.Expression.FunctionCall("ARRAY", subExpressions, sourcePosition = pos)
             }
-            node.findFunctionCall() != null -> {
-                val functionCall = node.findFunctionCall()!!
-                val args = functionCall.findExpression().map(::parseExpression)
-                val functionName = parseSimpleIdentifier(functionCall.findSimpleIdentifier()!!).identifier
-                Ast.Expression.FunctionCall(functionName, args, sourcePosition = pos)
-            }
+            node.findFunctionCall() != null -> parseFunctionCall(node.findFunctionCall()!!)
             node.OP_OPEN_BRACKET() != null -> subExpressions.single()
             else -> TODO("Can't parse expression ${node.text}")
         }
+    }
+
+    private fun parseFunctionCall(node: SqlParser.FunctionCallContext): FunctionCall {
+        val pos = SourcePosition(node.position)
+        val args = node.findExpression().map(::parseExpression)
+        val functionName = parseSimpleIdentifier(node.findSimpleIdentifier()!!).identifier
+        return Ast.Expression.FunctionCall(functionName, args, sourcePosition = pos)
     }
 
     private fun parseCase(node: SqlParser.CaseStatementContext): Case {
