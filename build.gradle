@@ -1,3 +1,5 @@
 buildscript {
     ext.antlr_kotlin_version = 'bdb861c'
 }
+
+apply plugin: 'maven'

@@ -11,6 +11,7 @@ buildscript {
 
 plugins {
     id 'kotlin-platform-js' version '1.3-M1'
+    id 'maven'
 }
 
 apply plugin: 'org.jetbrains.kotlin.frontend'
@@ -29,7 +30,7 @@ dependencies {
 }
 
 kotlinFrontend {
-    downloadNodeJsVersion = "8.11.3"
+    downloadNodeJsVersion = "10.8.0"
 
     npm {
         devDependency("karma")

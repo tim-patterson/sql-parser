@@ -27,6 +27,7 @@ pluginManagement {
         }
     }
 }
+
 rootProject.name = 'sql-parser'
 
 include 'sql-parser-common', 'sql-parser-jvm', 'sql-parser-js'

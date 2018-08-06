@@ -1,6 +1,7 @@
 plugins {
     id 'kotlin-platform-common' version '1.3-M1'
     id 'antlr'
+    id 'maven'
 }
 
 generateGrammarSource {
