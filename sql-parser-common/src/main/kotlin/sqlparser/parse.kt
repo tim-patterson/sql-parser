@@ -233,27 +233,36 @@ private class Parser {
         val pos = SourcePosition(node.position)
         return when {
             node.findLiteral() != null -> parseLiteral(node.findLiteral()!!)
-            node.AND() != null -> FunctionCall("AND", subExpressions, true, pos)
-            node.OR() != null -> FunctionCall("OR", subExpressions, true, pos)
-            node.OP_DIV() != null -> FunctionCall("/", subExpressions, true, pos)
-            node.OP_MULT() != null -> FunctionCall("*", subExpressions, true, pos)
-            node.OP_PLUS() != null -> FunctionCall("+", subExpressions, true, pos)
-            node.OP_MINUS() != null -> FunctionCall("-", subExpressions, true, pos)
-            node.OP_EQ() != null -> FunctionCall("=", subExpressions, true, pos)
-            node.OP_GT() != null -> FunctionCall(">", subExpressions, true, pos)
-            node.OP_GTE() != null -> FunctionCall(">=", subExpressions, true, pos)
-            node.OP_LT() != null -> FunctionCall("<", subExpressions, true, pos)
-            node.OP_LTE() != null -> FunctionCall("<=", subExpressions, true, pos)
-            node.OP_NEQ() != null -> FunctionCall("!=", subExpressions, true, pos)
-            node.OP_MOD() != null -> FunctionCall("%", subExpressions, true, pos)
+            node.AND() != null -> FunctionCall("AND", subExpressions, false, true, pos)
+            node.OR() != null -> FunctionCall("OR", subExpressions, false, true, pos)
+            node.OP_DIV() != null -> FunctionCall("/", subExpressions, false, true, pos)
+            node.OP_MULT() != null -> FunctionCall("*", subExpressions, false, true, pos)
+            node.OP_PLUS() != null -> FunctionCall("+", subExpressions, false, true, pos)
+            node.OP_MINUS() != null -> FunctionCall("-", subExpressions, false, true, pos)
+            node.OP_EQ() != null -> FunctionCall("=", subExpressions, false, true, pos)
+            node.OP_GT() != null -> FunctionCall(">", subExpressions, false, true, pos)
+            node.OP_GTE() != null -> FunctionCall(">=", subExpressions, false, true, pos)
+            node.OP_LT() != null -> FunctionCall("<", subExpressions, false, true, pos)
+            node.OP_LTE() != null -> FunctionCall("<=", subExpressions, false, true, pos)
+            node.OP_NEQ() != null -> FunctionCall("!=", subExpressions, false, true, pos)
+            node.OP_MOD() != null -> FunctionCall("%", subExpressions, false, true, pos)
             node.findCaseStatement() != null -> parseCase(node.findCaseStatement()!!)
             node.IN() != null -> if (node.NOT() != null) {
-                FunctionCall("NOT IN", subExpressions, true, pos)
+                FunctionCall("NOT IN", subExpressions, false, true, pos)
             } else {
-                FunctionCall("IN", subExpressions, true, pos)
+                FunctionCall("IN", subExpressions, false, true, pos)
             }
-            node.NOT() != null -> FunctionCall("IS NOT NULL", subExpressions, true, pos)
-            node.NULL() != null -> FunctionCall("IS NULL", subExpressions, true, pos)
+            node.IS() != null -> if(node.NOT() != null) {
+                FunctionCall("IS NOT", subExpressions, false, true, pos)
+            } else {
+                FunctionCall("IS", subExpressions, false, true, pos)
+            }
+            node.LIKE() != null -> if(node.NOT() != null) {
+                FunctionCall("NOT LIKE", subExpressions, false, true, pos)
+            } else {
+                FunctionCall("LIKE", subExpressions, false, true, pos)
+            }
+            node.NOT() != null -> FunctionCall("NOT", subExpressions, false, true, pos)
             node.findQualifiedIdentifier() != null -> {
                 Reference(parseQualifiedIdentifier(node.findQualifiedIdentifier()!!), pos)
             }
@@ -270,9 +279,10 @@ private class Parser {
 
     private fun parseFunctionCall(node: SqlParser.FunctionCallContext): FunctionCall {
         val pos = SourcePosition(node.position)
+        val distinct = node.DISTINCT() != null
         val args = node.findExpression().map(::parseExpression)
         val functionName = parseSimpleIdentifier(node.findSimpleIdentifier()!!).identifier
-        return Ast.Expression.FunctionCall(functionName, args, sourcePosition = pos)
+        return Ast.Expression.FunctionCall(functionName, args, distinct, sourcePosition = pos)
     }
 
     private fun parseCase(node: SqlParser.CaseStatementContext): Case {

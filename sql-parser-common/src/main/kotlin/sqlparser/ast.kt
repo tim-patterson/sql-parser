@@ -3,7 +3,6 @@ package sqlparser
 import org.antlr.v4.kotlinruntime.ast.Point
 import org.antlr.v4.kotlinruntime.ast.Position
 
-
 sealed class Ast {
     internal abstract val sourcePosition: SP
 
@@ -28,7 +27,7 @@ sealed class Ast {
             data class BooleanLiteral(val value: Boolean, override val sourcePosition: SP = SP()): Literal()
             data class NullLiteral(override val sourcePosition: SP = SP()): Literal()
         }
-        data class FunctionCall(val functionName: String, val args: List<Expression>, val infix: Boolean=false, override val sourcePosition: SP = SP()): Expression()
+        data class FunctionCall(val functionName: String, val args: List<Expression>, val distinct: Boolean = false, val infix: Boolean=false, override val sourcePosition: SP = SP()): Expression()
         data class Reference(val identifier: Ast.Identifier, override val sourcePosition: SP = SP()): Expression()
         data class Case(val inputExpression: Expression?,
                         val matchExpressions: List<Pair<Expression, Expression>>,

@@ -216,9 +216,9 @@ open class SqlPrinter {
             if (node.functionName == "IN" || node.functionName == "NOT IN") {
                 // special case for IN/NOT IN
                 "$left ${node.functionName} (${rawArgs.drop(1).joinToString { render(it) }})"
-            } else if (rawArgs.size == 1 && node.functionName == "-") {
-                // special case for unitary minus
-                "- $left"
+            } else if (rawArgs.size == 1 && (node.functionName == "-" || node.functionName == "NOT")) {
+                // special case for unitary minus and not
+                "${node.functionName} $left"
             } else {
                 "$left ${node.functionName}" + (right?.let { " $it" } ?: "")
             }
@@ -229,7 +229,8 @@ open class SqlPrinter {
             "ARRAY[${args.joinToString()}]"
         } else {
             val args = rawArgs.map(::render)
-            "${node.functionName}(${args.joinToString()})"
+            val distinct = if (node.distinct) "DISTINCT " else ""
+            "${node.functionName}($distinct${args.joinToString()})"
         }
     }
 

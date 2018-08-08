@@ -171,11 +171,14 @@ ifNotExists
 expression
   : OP_OPEN_BRACKET expression OP_CLOSE_BRACKET
   | OP_MINUS expression
+  | NOT expression
+  | expression IS expression
+  | expression IS NOT expression
+  | expression LIKE expression
+  | expression NOT LIKE expression
   | expression ( OP_MULT | OP_DIV | OP_MOD ) expression
   | expression ( OP_PLUS | OP_MINUS ) expression
   | expression ( OP_GT | OP_GTE | OP_LT | OP_LTE | OP_EQ | OP_NEQ ) expression
-  | expression IS NULL
-  | expression IS NOT NULL
   | expression ( AND | OR ) expression
   | expression NOT? IN OP_OPEN_BRACKET expression (OP_COMMA expression)* OP_CLOSE_BRACKET
   | literal
@@ -203,7 +206,7 @@ caseStatementElse
   ;
 
 functionCall
-  : simpleIdentifier OP_OPEN_BRACKET (expression (OP_COMMA expression)*)? OP_CLOSE_BRACKET windowSpec?
+  : simpleIdentifier OP_OPEN_BRACKET (DISTINCT? expression (OP_COMMA expression)*)? OP_CLOSE_BRACKET windowSpec?
   ;
 
 windowSpec
@@ -479,8 +482,8 @@ OP_GTE: '>=';
 OP_LT: '<';
 OP_LTE: '<=';
 OP_EQ: '=' | '==';
-OP_NS_EQ: '<=>';
 OP_NEQ: '!=' | '<>';
+OP_NS_EQ: '<=>';
 OP_DOT: '.';
 OP_COMMA: ',';
 OP_CONCAT: '||';
