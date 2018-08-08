@@ -131,4 +131,20 @@ class LiteralTest {
 
         assertEquals(expected, SqlPrinter.from(parseExpression(expression, true)))
     }
+
+    @Test
+    fun testIntervalLiteral() {
+        val expression = "interval '7' day"
+        val expected = Ast.Expression.Literal.IntervalLiteral("7 DAY")
+
+        assertEquals(expected, parseExpression(expression, true))
+    }
+
+    @Test
+    fun testIntervalLiteralToString() {
+        val expression = "interval '7' day"
+        val expected = "INTERVAL '7 DAY'"
+
+        assertEquals(expected, SqlPrinter.from(parseExpression(expression, true)))
+    }
 }

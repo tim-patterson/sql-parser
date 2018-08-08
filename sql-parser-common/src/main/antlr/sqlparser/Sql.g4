@@ -117,6 +117,7 @@ fromClause
 fromItem
   : dataSource (AS? simpleIdentifier)?
   | fromItem (LEFT | RIGHT | FULL)? OUTER JOIN fromItem ON expression
+  | fromItem (LEFT | RIGHT | FULL) JOIN fromItem ON expression
   | fromItem INNER? JOIN fromItem ON expression
   | fromItem CROSS JOIN fromItem
   | tableFunction
@@ -169,7 +170,8 @@ ifNotExists
   ;
 
 expression
-  : OP_OPEN_BRACKET expression OP_CLOSE_BRACKET
+  : literal
+  | OP_OPEN_BRACKET expression OP_CLOSE_BRACKET
   | OP_MINUS expression
   | NOT expression
   | expression IS expression
@@ -180,13 +182,14 @@ expression
   | expression ( OP_PLUS | OP_MINUS ) expression
   | expression ( OP_GT | OP_GTE | OP_LT | OP_LTE | OP_EQ | OP_NEQ ) expression
   | expression ( AND | OR ) expression
+  | expression BETWEEN expression AND expression
   | expression NOT? IN OP_OPEN_BRACKET expression (OP_COMMA expression)* OP_CLOSE_BRACKET
-  | literal
   | qualifiedIdentifier
   | functionCall
   | caseStatement
   | cast
   | ARRAY OP_OPEN_SQUARE (expression (OP_COMMA expression)*)? OP_CLOSE_SQUARE
+  | selectOrUnion
   ;
 
 cast
@@ -232,6 +235,7 @@ literal
   | POSITIVE_INT_LITERAL
   | POSITIVE_FLOAT_LITERAL
   | DATE STRING_LITERAL
+  | INTERVAL STRING_LITERAL intervalUnits?
   | TRUE
   | FALSE
   | NULL
@@ -285,11 +289,11 @@ keyword
   | HAVING
   | HOUR
   | IF
-  | IN
   | INNER
   | INSERT
   | INTERVAL
   | INTO
+  | IN
   | IS
   | INPUTFORMAT
   | JOIN

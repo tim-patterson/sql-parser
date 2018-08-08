@@ -232,7 +232,9 @@ private class Parser {
         val subExpressions = node.findExpression().map(::parseExpression)
         val pos = SourcePosition(node.position)
         return when {
+            node.findSelectOrUnion() != null -> ScalarSelect(parseSelectOrUnion(node.findSelectOrUnion()!!), pos)
             node.findLiteral() != null -> parseLiteral(node.findLiteral()!!)
+            node.BETWEEN() != null -> FunctionCall("BETWEEN", subExpressions, false, true, pos)
             node.AND() != null -> FunctionCall("AND", subExpressions, false, true, pos)
             node.OR() != null -> FunctionCall("OR", subExpressions, false, true, pos)
             node.OP_DIV() != null -> FunctionCall("/", subExpressions, false, true, pos)
@@ -301,6 +303,7 @@ private class Parser {
             node.FALSE() != null -> BooleanLiteral(false, pos)
             node.TRUE() != null -> BooleanLiteral(true, pos)
             node.NULL() != null -> NullLiteral(pos)
+            node.INTERVAL() != null -> IntervalLiteral((parseStringLit(node.STRING_LITERAL()!!) + (node.findIntervalUnits()?.let{ " ${it.text}"} ?: "")).toUpperCase() )
             node.DATE() != null -> DateLiteral(parseStringLit(node.STRING_LITERAL()!!), pos)
             node.STRING_LITERAL() != null -> StringLiteral(parseStringLit(node.STRING_LITERAL()!!), pos)
             node.POSITIVE_FLOAT_LITERAL() != null -> FloatLiteral(node.POSITIVE_FLOAT_LITERAL()!!.text.toDouble(), pos)

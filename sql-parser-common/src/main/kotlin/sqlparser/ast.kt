@@ -21,6 +21,7 @@ sealed class Ast {
     sealed class Expression: Ast() {
         sealed class Literal: Expression() {
             data class DateLiteral(val value: String, override val sourcePosition: SP = SP()): Literal()
+            data class IntervalLiteral(val value: String, override val sourcePosition: SP = SP()): Literal()
             data class StringLiteral(val value: String, override val sourcePosition: SP = SP()): Literal()
             data class IntLiteral(val value: Long, override val sourcePosition: SP = SP()): Literal()
             data class FloatLiteral(val value: Double, override val sourcePosition: SP = SP()): Literal()
@@ -33,6 +34,7 @@ sealed class Ast {
                         val matchExpressions: List<Pair<Expression, Expression>>,
                         val elseExpression: Expression?, override val sourcePosition: SP = SP()): Expression()
         data class Cast(val expression: Expression, val dataType: String, override val sourcePosition: SP = SP()): Expression()
+        data class ScalarSelect(val subQuery: SelectOrUnion, override val sourcePosition: SP = SP()): Expression()
     }
 
     data class NamedExpression(val name: String?, val expression: Expression, override val sourcePosition: SP = SP()): Ast()

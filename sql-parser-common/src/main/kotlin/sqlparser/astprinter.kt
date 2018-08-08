@@ -168,6 +168,7 @@ open class SqlPrinter {
             is Expression.FunctionCall -> render(node)
             is Expression.Case -> render(node)
             is Expression.Cast -> render(node)
+            is Expression.ScalarSelect -> "(${render(node.subQuery)})"
         }
     }
 
@@ -213,9 +214,13 @@ open class SqlPrinter {
                 }
             }
 
+
+
             if (node.functionName == "IN" || node.functionName == "NOT IN") {
                 // special case for IN/NOT IN
                 "$left ${node.functionName} (${rawArgs.drop(1).joinToString { render(it) }})"
+            } else if (node.functionName == "BETWEEN") {
+                "$left ${node.functionName} $right AND ${render(rawArgs[2])}"
             } else if (rawArgs.size == 1 && (node.functionName == "-" || node.functionName == "NOT")) {
                 // special case for unitary minus and not
                 "${node.functionName} $left"
@@ -237,12 +242,17 @@ open class SqlPrinter {
     protected open fun render(node: Expression.Literal): String {
         return when(node) {
             is DateLiteral -> render(node)
+            is IntervalLiteral -> render(node)
             is FloatLiteral -> render(node)
             is IntLiteral -> render(node)
             is NullLiteral -> render(node)
             is BooleanLiteral -> render(node)
             is StringLiteral -> render(node)
         }
+    }
+
+    protected open fun render(node: IntervalLiteral): String {
+        return "INTERVAL '${node.value}'"
     }
 
     protected open fun render(node: DateLiteral): String {

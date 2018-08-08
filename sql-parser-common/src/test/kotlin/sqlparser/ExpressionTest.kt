@@ -322,6 +322,26 @@ class ExpressionTest {
     }
 
     @Test
+    fun testBetween() {
+        val expression = "foo between date '2010-01-01' and date '2010-12-31'"
+        val expected = FunctionCall("BETWEEN", listOf(
+                Reference(Ast.Identifier(null, "foo")),
+                Literal.DateLiteral("2010-01-01"),
+                Literal.DateLiteral("2010-12-31")
+        ), infix = true)
+
+        assertEquals(expected, parseExpression(expression, true))
+    }
+
+    @Test
+    fun testBetweenToString() {
+        val expression = "foo between date '2010-01-01' and date '2010-12-31'"
+        val expected = "foo BETWEEN DATE '2010-01-01' AND DATE '2010-12-31'"
+
+        assertEquals(expected, SqlPrinter.from(parseExpression(expression, true)))
+    }
+
+    @Test
     fun testNeqToString() {
         val expression = "1<>2"
         val expected = "1 != 2"
