@@ -193,7 +193,7 @@ expression
   ;
 
 cast
-  : CAST OP_OPEN_BRACKET expression AS dataType OP_CLOSE_BRACKET
+  : (CAST | TRY_CAST) OP_OPEN_BRACKET expression AS dataType OP_CLOSE_BRACKET
   ;
 
 caseStatement
@@ -345,6 +345,7 @@ keyword
   | TEMP
   | TEMPORARY
   | TERMINATED
+  | TRY_CAST
   | THEN
   | TRUE
   | TRUNCATE
@@ -468,6 +469,7 @@ THEN: T H E N;
 TO: T O;
 TRUE: T R U E;
 TRUNCATE: T R U N C A T E;
+TRY_CAST: T R Y '_' C A S T;
 UNBOUNDED: U N B O U N D E D;
 UNION: U N I O N;
 WITH: W I T H;

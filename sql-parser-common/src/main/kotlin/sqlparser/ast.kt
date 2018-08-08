@@ -33,7 +33,7 @@ sealed class Ast {
         data class Case(val inputExpression: Expression?,
                         val matchExpressions: List<Pair<Expression, Expression>>,
                         val elseExpression: Expression?, override val sourcePosition: SP = SP()): Expression()
-        data class Cast(val expression: Expression, val dataType: String, override val sourcePosition: SP = SP()): Expression()
+        data class Cast(val expression: Expression, val dataType: String, val _try: Boolean=false, override val sourcePosition: SP = SP()): Expression()
         data class ScalarSelect(val subQuery: SelectOrUnion, override val sourcePosition: SP = SP()): Expression()
     }
 

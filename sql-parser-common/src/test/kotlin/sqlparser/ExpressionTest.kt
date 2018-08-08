@@ -266,6 +266,22 @@ class ExpressionTest {
     }
 
     @Test
+    fun testTryCast() {
+        val expression = "try_cast('2018-01-01' as date)"
+        val expected = Cast(Literal.StringLiteral("2018-01-01"), "DATE", _try = true)
+
+        assertEquals(expected, parseExpression(expression, true))
+    }
+
+    @Test
+    fun testTryCastToString() {
+        val expression = "try_cast('2018-01-01' as date)"
+        val expected = "TRY_CAST('2018-01-01' AS DATE)"
+
+        assertEquals(expected, SqlPrinter.from(parseExpression(expression, true)))
+    }
+
+    @Test
     fun testLike() {
         val expression = "'foo' like '%oo'"
         val expected = FunctionCall("LIKE", listOf(

@@ -268,7 +268,12 @@ private class Parser {
             node.findQualifiedIdentifier() != null -> {
                 Reference(parseQualifiedIdentifier(node.findQualifiedIdentifier()!!), pos)
             }
-            node.findCast() != null -> Cast(parseExpression(node.findCast()!!.findExpression()!!), parseDataType(node.findCast()!!.findDataType()!!), pos)
+            node.findCast() != null -> {
+                val expr = parseExpression(node.findCast()!!.findExpression()!!)
+                val dataType = parseDataType(node.findCast()!!.findDataType()!!)
+                val _try = node.findCast()!!.TRY_CAST() != null
+                Cast(expr, dataType, _try, pos)
+            }
             node.ARRAY() != null -> {
                 // Special array constructor used by presto etc
                 Ast.Expression.FunctionCall("ARRAY", subExpressions, sourcePosition = pos)

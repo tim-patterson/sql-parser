@@ -173,7 +173,8 @@ open class SqlPrinter {
     }
 
     protected open fun render(node: Expression.Cast): String {
-        return "CAST(${render(node.expression)} AS ${node.dataType})"
+        val _try = if (node._try) "TRY_" else ""
+        return "${_try}CAST(${render(node.expression)} AS ${node.dataType})"
     }
 
     protected open fun render(node: Expression.Reference): String {
