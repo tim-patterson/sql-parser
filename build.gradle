@@ -1,5 +1,5 @@
 buildscript {
-    ext.antlr_kotlin_version = '9b6d360'
+    ext.antlr_kotlin_version = '5abb561'
 }
 
 apply plugin: 'maven'

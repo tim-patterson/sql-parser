@@ -1,7 +1,9 @@
 package sqlparser
 
-import org.antlr.v4.kotlinruntime.ast.Point
-import org.antlr.v4.kotlinruntime.ast.Position
+import org.antlr.v4.kotlinruntime.ParserRuleContext
+import org.antlr.v4.kotlinruntime.Token
+import kotlin.math.max
+import kotlin.math.min
 
 sealed class Ast {
     internal abstract val sourcePosition: SP
@@ -80,26 +82,17 @@ enum class JoinType { INNER, FULL_OUTER, CROSS, LEFT_OUTER, RIGHT_OUTER }
 
 // Wrapper class to stop Ast objects using Source position for equality,
 // This makes unit testing etc so much easier as well as comparing subtrees etc
-class SourcePosition(val pos: Position? = null) {
-    override fun equals(other: Any?) =  other is SourcePosition
+class SourceInfo(var startIdx: Int = -1, val endIdx: Int = -1) {
+
+    constructor(node: ParserRuleContext): this(node.start!!.startIndex, node.stop!!.stopIndex)
+
+    override fun equals(other: Any?) =  other is SourceInfo
     override fun hashCode() = 0
     /**
      * Method to return the enclosing position of two positions
      */
-    operator fun plus(other: SourcePosition): SourcePosition {
-        return when{
-            pos == null -> other
-            other.pos == null -> this
-            else -> {
-                SourcePosition(Position(min(pos.start, other.pos.start), max(pos.end, other.pos.end)))
-            }
-        }
+    operator fun plus(other: SourceInfo): SourceInfo {
+        return SourceInfo(min(startIdx, other.startIdx), max(endIdx, other.endIdx))
     }
 }
-private typealias SP = SourcePosition
-
-private fun min(point1: Point, point2: Point) =
-        if (point1.isBefore(point2)) point1 else point2
-
-private fun max(point1: Point, point2: Point) =
-        if (point1.isBefore(point2)) point2 else point1
+private typealias SP = SourceInfo

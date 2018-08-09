@@ -66,7 +66,7 @@ private class DialectRewriter(val delegate: TokenSource, val dialect: Dialect) :
 private class Parser {
 
     fun parseFile(node: SqlParser.FileContext): File {
-        val pos = SourcePosition(node.position)
+        val pos = SourceInfo(node)
         return Ast.File(node.findStmt().map(::parseStatement), pos)
     }
 
@@ -81,7 +81,7 @@ private class Parser {
     }
 
     private fun parseCreateSchemaStmt(node: SqlParser.CreateSchemaStmtContext): Statement.CreateSchema {
-        val pos = SourcePosition(node.position)
+        val pos = SourceInfo(node)
         val ifNotExists = node.findIfNotExists() != null
         val schemaName = parseSimpleIdentifier(node.findSimpleIdentifier()
                 ?: node.findCreateSchemaStmtAuthorizationClause()!!.findSimpleIdentifier()!!)
@@ -90,7 +90,7 @@ private class Parser {
 
 
     private fun parseCreateTableStmt(node: SqlParser.CreateTableStmtContext): Statement.CreateTable {
-        val pos = SourcePosition(node.position)
+        val pos = SourceInfo(node)
         //val ifNotExists = node.findIfNotExists() != null
         val tableName = parseQualifiedIdentifier(node.findQualifiedIdentifier()!!)
         val columns = node.findCreateTableStmtColumnList()!!.findCreateTableStmtColumnSpec().map(::parseColumnDefinition)
@@ -98,13 +98,13 @@ private class Parser {
     }
 
     private fun parseSelectStmt(node: SqlParser.SelectStmtContext): Statement.SelectStmt {
-        val pos = SourcePosition(node.position)
+        val pos = SourceInfo(node)
         val selectClause = parseSelectOrUnion(node.findSelectOrUnion()!!)
         return Statement.SelectStmt(selectClause, pos)
     }
 
     private fun parseSelectOrUnion(node: SqlParser.SelectOrUnionContext): SelectOrUnion {
-        val pos = SourcePosition(node.position)
+        val pos = SourceInfo(node)
         return if(node.UNION() != null) {
             val top = parseSelectOrUnion(node.findSelectOrUnion()!!)
             val bottom = parseSelectClause(node.findSelectClause()!!)
@@ -117,10 +117,10 @@ private class Parser {
     }
 
     private fun parseSelectClause(node: SqlParser.SelectClauseContext): SelectClause {
-        val pos = SourcePosition(node.position)
+        val pos = SourceInfo(node)
         val ctes = node.findWithClause()?.let {
             it.findWithClauseItem().map {
-                val pos = SourcePosition(it.position)
+                val pos = SourceInfo(it)
                 val alias = parseSimpleIdentifier(it.findSimpleIdentifier()!!)
                 val subSelect = parseSelectOrUnion(it.findSelectOrUnion()!!)
                 DataSource.SubQuery(subSelect, alias, pos)
@@ -138,7 +138,7 @@ private class Parser {
     }
 
     private fun parseFromClause(node: SqlParser.FromClauseContext): FromClause {
-        val pos = SourcePosition(node.position)
+        val pos = SourceInfo(node)
         val fromItems = node.findFromItem().map(::parseFromItem)
 
         val source = fromItems.reduce { left, right ->
@@ -148,7 +148,7 @@ private class Parser {
     }
 
     private fun parseFromItem(node: SqlParser.FromItemContext): DataSource {
-        val pos = SourcePosition(node.position)
+        val pos = SourceInfo(node)
         val alias = node.findSimpleIdentifier()?.let { parseSimpleIdentifier(it) }
 
         return when {
@@ -199,21 +199,21 @@ private class Parser {
     }
 
     private fun parseNamedExpression(node: SqlParser.NamedExpressionContext): NamedExpression {
-        val pos = SourcePosition(node.position)
+        val pos = SourceInfo(node)
         val expression = parseExpression(node.findExpression()!!)
         val name = node.findSimpleIdentifier()?.let { parseSimpleIdentifier(it).identifier }
         return NamedExpression(name, expression, pos)
     }
 
     private fun parseOrderExpression(node: SqlParser.OrderByExpressionContext): OrderExpression {
-        val pos = SourcePosition(node.position)
+        val pos = SourceInfo(node)
         val expression = parseExpression(node.findExpression()!!)
         val asc = node.DESC() == null
         return OrderExpression(expression, asc, pos)
     }
 
     private fun parseColumnDefinition(node: SqlParser.CreateTableStmtColumnSpecContext): ColumnDefinition {
-        val pos = SourcePosition(node.position)
+        val pos = SourceInfo(node)
         val columnName = parseSimpleIdentifier(node.findSimpleIdentifier()!!)
         val dataType = parseDataType(node.findDataType()!!)
         return Ast.ColumnDefinition(columnName, dataType, pos)
@@ -230,7 +230,7 @@ private class Parser {
 
     fun parseExpression(node: SqlParser.ExpressionContext): Expression {
         val subExpressions = node.findExpression().map(::parseExpression)
-        val pos = SourcePosition(node.position)
+        val pos = SourceInfo(node)
         return when {
             node.findSelectOrUnion() != null -> ScalarSelect(parseSelectOrUnion(node.findSelectOrUnion()!!), pos)
             node.findLiteral() != null -> parseLiteral(node.findLiteral()!!)
@@ -285,7 +285,7 @@ private class Parser {
     }
 
     private fun parseFunctionCall(node: SqlParser.FunctionCallContext): FunctionCall {
-        val pos = SourcePosition(node.position)
+        val pos = SourceInfo(node)
         val distinct = node.DISTINCT() != null
         val args = node.findExpression().map(::parseExpression)
         val functionName = parseSimpleIdentifier(node.findSimpleIdentifier()!!).identifier
@@ -293,7 +293,7 @@ private class Parser {
     }
 
     private fun parseCase(node: SqlParser.CaseStatementContext): Case {
-        val pos = SourcePosition(node.position)
+        val pos = SourceInfo(node)
         val inputExpression = node.findExpression()?.let { parseExpression(it) }
         val elseExpression = node.findCaseStatementElse()?.let { parseExpression(it.findExpression()!!) }
         val cases = node.findCaseStatementMatch().map {
@@ -303,7 +303,7 @@ private class Parser {
     }
 
     private fun parseLiteral(node: SqlParser.LiteralContext): Literal {
-        val pos = SourcePosition(node.position)
+        val pos = SourceInfo(node)
         return when {
             node.FALSE() != null -> BooleanLiteral(false, pos)
             node.TRUE() != null -> BooleanLiteral(true, pos)
@@ -335,7 +335,7 @@ private class Parser {
         } else {
             nodeText
         }
-        return Ast.Identifier(null, identifier, sourcePosition = SourcePosition(node.position))
+        return Ast.Identifier(null, identifier, sourcePosition = SourceInfo(node))
     }
 
     private fun parseStringLit(node: TerminalNode): String {
