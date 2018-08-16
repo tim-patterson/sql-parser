@@ -1,7 +1,6 @@
 package sqlparser
 
 import org.antlr.v4.kotlinruntime.ParserRuleContext
-import org.antlr.v4.kotlinruntime.Token
 import kotlin.math.max
 import kotlin.math.min
 
@@ -18,7 +17,7 @@ sealed class Ast {
         data class SelectStmt(val selectClause: SelectOrUnion, override val sourcePosition: SP = SP()): Statement()
     }
 
-    data class Identifier(val qualifier: String?, val identifier: String, override val sourcePosition: SP = SP()): Ast()
+    data class Identifier(val qualifiers: List<String>, val identifier: String, override val sourcePosition: SP = SP()): Ast()
     data class ColumnDefinition(val columnName: Identifier, val type: String, override val sourcePosition: SP = SP()): Ast()
     sealed class Expression: Ast() {
         sealed class Literal: Expression() {

@@ -9,7 +9,15 @@ class LiteralTest {
     @Test
     fun testIdentifier() {
         val expression = "\"Hello world\""
-        val expected = Ast.Expression.Reference(Ast.Identifier(null,"hello world"))
+        val expected = Ast.Expression.Reference(Ast.Identifier(listOf(),"hello world"))
+
+        assertEquals(expected, parseExpression(expression, true))
+    }
+
+    @Test
+    fun testQualifiedIdentifier() {
+        val expression = "foo.\"bar\".\"Hello world\""
+        val expected = Ast.Expression.Reference(Ast.Identifier(listOf("foo", "bar"),"hello world"))
 
         assertEquals(expected, parseExpression(expression, true))
     }
@@ -147,4 +155,13 @@ class LiteralTest {
 
         assertEquals(expected, SqlPrinter.from(parseExpression(expression, true)))
     }
+
+    @Test
+    fun testSqlEscapedString() {
+        val expression = "'a''b'"
+        val expected = "'a\\'b'"
+
+        assertEquals(expected, SqlPrinter.from(parseExpression(expression, true)))
+    }
+
 }

@@ -221,7 +221,7 @@ windowSpecPartition
   ;
 
 qualifiedIdentifier
-  : simpleIdentifier (OP_DOT simpleIdentifier)?
+  : simpleIdentifier (OP_DOT simpleIdentifier)*
   ;
 
 simpleIdentifier
@@ -478,6 +478,14 @@ WHERE: W H E R E;
 VIEW: V I E W;
 YEAR: Y E A R;
 
+SINGLE_LINE_COMMENT
+ : '--' ~[\r\n]* -> channel(2)
+ ;
+
+MULTI_LINE_COMMENT
+ : '/*' .*? '*/' -> channel(2)
+ ;
+
 
 OP_PLUS: '+';
 OP_MINUS: '-';
@@ -520,7 +528,7 @@ BACKTICKED_LIT
  ;
 
 SINGLE_QUOTED_LIT
- : '\'' (('\\' .) | ~('\\' | '\''))* '\''
+ : '\'' (('\\' .) | ('\'\'') | ~('\\' | '\'') )* '\''
  ;
 
 DOUBLE_QUOTED_LIT
@@ -530,14 +538,6 @@ DOUBLE_QUOTED_LIT
 // Whitespace
 SPACES
  : [ \u000B\t\r\n] -> channel(HIDDEN)
- ;
-
-SINGLE_LINE_COMMENT
- : '--' ~[\r\n]* -> channel(2)
- ;
-
-MULTI_LINE_COMMENT
- : '/*' .*? '*/' -> channel(2)
  ;
 
 // Fragments

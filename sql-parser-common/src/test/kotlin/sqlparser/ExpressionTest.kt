@@ -72,7 +72,7 @@ class ExpressionTest {
     fun testDistinctFunction() {
         val expression = "sum(distinct foo)"
         val expected = FunctionCall("sum", listOf(
-                Reference(Ast.Identifier(null, "foo"))
+                Reference(Ast.Identifier(listOf(), "foo"))
         ), distinct = true)
 
         assertEquals(expected, parseExpression(expression, true))
@@ -90,7 +90,7 @@ class ExpressionTest {
     fun testReference() {
         val expression = "sum(monEY)"
         val expected = FunctionCall("sum", listOf(
-                Reference(Ast.Identifier(null, "money"))
+                Reference(Ast.Identifier(listOf(), "money"))
         ))
 
         assertEquals(expected, parseExpression(expression, true))
@@ -108,7 +108,7 @@ class ExpressionTest {
     fun testQualifiedReference() {
         val expression = "sum(foobar.monEY)"
         val expected = FunctionCall("sum", listOf(
-                Reference(Ast.Identifier("foobar", "money"))
+                Reference(Ast.Identifier(listOf("foobar"), "money"))
         ))
 
         assertEquals(expected, parseExpression(expression, true))
@@ -126,7 +126,7 @@ class ExpressionTest {
     fun testIn() {
         val expression = "foobar in(1,2,3)"
         val expected = FunctionCall("IN", listOf(
-                Reference(Ast.Identifier(null, "foobar")),
+                Reference(Ast.Identifier(listOf(), "foobar")),
                 IntLiteral(1),
                 IntLiteral(2),
                 IntLiteral(3)
@@ -205,8 +205,8 @@ class ExpressionTest {
     fun testCase1() {
         val expression = "case when a then 1 when b then 2 else 3 end"
         val expected = Case(null, listOf(
-                Reference(Ast.Identifier(null, "a")) to IntLiteral(1),
-                Reference(Ast.Identifier(null, "b")) to IntLiteral(2)
+                Reference(Ast.Identifier(listOf(), "a")) to IntLiteral(1),
+                Reference(Ast.Identifier(listOf(), "b")) to IntLiteral(2)
         ), IntLiteral(3))
 
         assertEquals(expected, parseExpression(expression, true))
@@ -228,9 +228,9 @@ class ExpressionTest {
     @Test
     fun testCase2() {
         val expression = "case foo when a then 1 when b then 2 else 3 end"
-        val expected = Case(Reference(Ast.Identifier(null, "foo")), listOf(
-                Reference(Ast.Identifier(null, "a")) to IntLiteral(1),
-                Reference(Ast.Identifier(null, "b")) to IntLiteral(2)
+        val expected = Case(Reference(Ast.Identifier(listOf(), "foo")), listOf(
+                Reference(Ast.Identifier(listOf(), "a")) to IntLiteral(1),
+                Reference(Ast.Identifier(listOf(), "b")) to IntLiteral(2)
         ), IntLiteral(3))
 
         assertEquals(expected, parseExpression(expression, true))
@@ -341,7 +341,7 @@ class ExpressionTest {
     fun testBetween() {
         val expression = "foo between date '2010-01-01' and date '2010-12-31'"
         val expected = FunctionCall("BETWEEN", listOf(
-                Reference(Ast.Identifier(null, "foo")),
+                Reference(Ast.Identifier(listOf(), "foo")),
                 Literal.DateLiteral("2010-01-01"),
                 Literal.DateLiteral("2010-12-31")
         ), infix = true)
@@ -364,5 +364,4 @@ class ExpressionTest {
 
         assertEquals(expected, SqlPrinter.from(parseExpression(expression, true)))
     }
-
 }

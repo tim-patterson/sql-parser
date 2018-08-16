@@ -16,12 +16,12 @@ class OrderByLimitTest {
         val expected = SelectStmt(
                 SelectClause(
                         listOf(
-                                NamedExpression(null, Reference(Identifier(null, "*")))
+                                NamedExpression(null, Reference(Identifier(listOf(), "*")))
                         ),
-                        fromClause = FromClause(DataSource.Table(Identifier(null, "foo"), null)),
+                        fromClause = FromClause(DataSource.Table(Identifier(listOf(), "foo"), null)),
                         orderByExpressions = listOf(
-                                OrderExpression(Reference(Identifier(null, "a")), asc = false),
-                                OrderExpression(Reference(Identifier(null, "b")), asc = true)
+                                OrderExpression(Reference(Identifier(listOf(), "a")), asc = false),
+                                OrderExpression(Reference(Identifier(listOf(), "b")), asc = true)
                         )
                 )
         )
@@ -48,9 +48,9 @@ class OrderByLimitTest {
         val expected = SelectStmt(
                 SelectClause(
                         listOf(
-                                NamedExpression(null, Reference(Identifier(null, "*")))
+                                NamedExpression(null, Reference(Identifier(listOf(), "*")))
                         ),
-                        fromClause = FromClause(DataSource.Table(Identifier(null, "foo"), null)),
+                        fromClause = FromClause(DataSource.Table(Identifier(listOf(), "foo"), null)),
                         limit = 100
                 )
         )

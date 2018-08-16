@@ -20,14 +20,14 @@ class CreateTableTest {
             );
         """.trimIndent()
         val expected = CreateTable(
-                Identifier(null, "films"),
+                Identifier(listOf(), "films"),
                 listOf(
-                        ColumnDefinition(Identifier(null, "code"), "CHAR(5)"),
-                        ColumnDefinition(Identifier(null, "title"), "VARCHAR(40)"),
-                        ColumnDefinition(Identifier(null, "did"), "INTEGER"),
-                        ColumnDefinition(Identifier(null, "date_prod"), "DATE"),
-                        ColumnDefinition(Identifier(null, "kind"), "VARCHAR(10)"),
-                        ColumnDefinition(Identifier(null, "len"), "INTERVAL HOUR TO MINUTE")
+                        ColumnDefinition(Identifier(listOf(), "code"), "CHAR(5)"),
+                        ColumnDefinition(Identifier(listOf(), "title"), "VARCHAR(40)"),
+                        ColumnDefinition(Identifier(listOf(), "did"), "INTEGER"),
+                        ColumnDefinition(Identifier(listOf(), "date_prod"), "DATE"),
+                        ColumnDefinition(Identifier(listOf(), "kind"), "VARCHAR(10)"),
+                        ColumnDefinition(Identifier(listOf(), "len"), "INTERVAL HOUR TO MINUTE")
                 )
         )
 

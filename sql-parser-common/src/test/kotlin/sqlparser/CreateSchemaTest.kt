@@ -11,7 +11,7 @@ class CreateSchemaTest {
     fun testCreateDatabase1() {
         val statement = "CREATE SCHEMA myschema;"
         val expected = CreateSchema(
-                Identifier(null, "myschema")
+                Identifier(listOf(), "myschema")
         )
 
         assertEquals(expected, parseStatement(statement, true))
@@ -28,7 +28,7 @@ class CreateSchemaTest {
     fun testCreateDatabase2() {
         val statement = "CREATE SCHEMA AUTHORIZATION joe;"
         val expected = CreateSchema(
-                Identifier(null, "joe")
+                Identifier(listOf(), "joe")
         )
 
         assertEquals(expected, parseStatement(statement, true))
@@ -38,7 +38,7 @@ class CreateSchemaTest {
     fun testCreateDatabase3() {
         val statement = "CREATE SCHEMA IF NOT EXISTS test AUTHORIZATION joe;"
         val expected = CreateSchema(
-                Identifier(null, "test"),
+                Identifier(listOf(), "test"),
                 ifNotExists = true
         )
 
@@ -49,7 +49,7 @@ class CreateSchemaTest {
     fun testCreateDatabase4() {
         val statement = "CREATE DATAbase myschema;"
         val expected = CreateSchema(
-                Identifier(null,"myschema")
+                Identifier(listOf(),"myschema")
         )
 
         assertEquals(expected, parseStatement(statement, true))

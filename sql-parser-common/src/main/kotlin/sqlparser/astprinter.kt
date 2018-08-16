@@ -289,10 +289,6 @@ open class SqlPrinter {
     }
 
     open fun render(node: Ast.Identifier): String {
-        return if (node.qualifier != null) {
-            "${node.qualifier}.${node.identifier}"
-        } else {
-            node.identifier
-        }
+        return (node.qualifiers + listOf(node.identifier)).joinToString(".")
     }
 }

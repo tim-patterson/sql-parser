@@ -20,8 +20,8 @@ class JoinTest {
                         ),
                         fromClause = FromClause(
                                 DataSource.Join(
-                                        DataSource.Table(Identifier(null, "foo"), null),
-                                        DataSource.Table(Identifier(null, "bar"), null),
+                                        DataSource.Table(Identifier(listOf(), "foo"), null),
+                                        DataSource.Table(Identifier(listOf(), "bar"), null),
                                         joinType = JoinType.CROSS
                                 )
                         )
@@ -53,12 +53,12 @@ class JoinTest {
                         ),
                         fromClause = FromClause(
                                 DataSource.Join(
-                                        DataSource.Table(Identifier(null, "foo"), null),
-                                        DataSource.Table(Identifier(null, "bar"), null),
+                                        DataSource.Table(Identifier(listOf(), "foo"), null),
+                                        DataSource.Table(Identifier(listOf(), "bar"), null),
                                         joinType = JoinType.INNER,
                                         onExpression = FunctionCall("=", listOf(
-                                                Reference(Identifier("foo", "id")),
-                                                Reference(Identifier("bar", "id"))
+                                                Reference(Identifier(listOf("foo"), "id")),
+                                                Reference(Identifier(listOf("bar"), "id"))
                                         ), infix = true)
                                 )
                         )
@@ -92,19 +92,19 @@ class JoinTest {
                         fromClause = FromClause(
                                 DataSource.Join(
                                         DataSource.Join(
-                                                DataSource.Table(Identifier(null, "foo"), null),
-                                                DataSource.Table(Identifier(null, "bar"), null),
+                                                DataSource.Table(Identifier(listOf(), "foo"), null),
+                                                DataSource.Table(Identifier(listOf(), "bar"), null),
                                                 joinType = JoinType.INNER,
                                                 onExpression = FunctionCall("=", listOf(
-                                                        Reference(Identifier("foo", "id")),
-                                                        Reference(Identifier("bar", "id"))
+                                                        Reference(Identifier(listOf("foo"), "id")),
+                                                        Reference(Identifier(listOf("bar"), "id"))
                                                 ), infix = true)
                                         ),
-                                        DataSource.Table(Identifier(null, "baz"), null),
+                                        DataSource.Table(Identifier(listOf(), "baz"), null),
                                         joinType = JoinType.INNER,
                                         onExpression = FunctionCall("=", listOf(
-                                                Reference(Identifier("bar", "id")),
-                                                Reference(Identifier("baz", "id"))
+                                                Reference(Identifier(listOf("bar"), "id")),
+                                                Reference(Identifier(listOf("baz"), "id"))
                                         ), infix = true)
                                 )
                         )

@@ -319,27 +319,31 @@ private class Parser {
 
 
     private fun parseQualifiedIdentifier(node: SqlParser.QualifiedIdentifierContext): Ast.Identifier {
-        val components = node.findSimpleIdentifier().map(::parseSimpleIdentifier)
-        return if (components.size > 1) {
-            components[1].copy(qualifier = components[0].identifier, sourcePosition = components[0].sourcePosition + components[1].sourcePosition)
-        } else {
-            components[0]
-        }
+        val components = node.findSimpleIdentifier().map(::parseStringId)
+        val last = components.last()
+        val rest = components.dropLast(1)
+        return Identifier(rest, last, sourcePosition = SourceInfo(node))
     }
 
 
     private fun parseSimpleIdentifier(node: SqlParser.SimpleIdentifierContext): Ast.Identifier {
+        val identifier = parseStringId(node)
+        return Ast.Identifier(listOf(), identifier, sourcePosition = SourceInfo(node))
+    }
+
+    private fun parseStringId(node: SqlParser.SimpleIdentifierContext): String {
         val nodeText = node.text.toLowerCase()
-        val identifier = if(node.IDENTIFIER()?.symbol is DialectRewriter.MasqueradingToken) {
+        return if(node.IDENTIFIER()?.symbol is DialectRewriter.MasqueradingToken) {
             nodeText.substring(1, nodeText.length - 1)
         } else {
             nodeText
         }
-        return Ast.Identifier(null, identifier, sourcePosition = SourceInfo(node))
     }
 
     private fun parseStringLit(node: TerminalNode): String {
         val str = node.text
-        return str.substring(1, str.length - 1)
+        val quote = str[0].toString()
+        val dbQuote = quote + quote
+        return str.substring(1, str.length - 1).replace(dbQuote, quote)
     }
 }

@@ -16,12 +16,12 @@ class GroupByTest {
         val expected = SelectStmt(
                 SelectClause(
                         listOf(
-                                NamedExpression(null, Reference(Identifier(null, "a"))),
-                                NamedExpression(null, FunctionCall("count", listOf(Reference(Identifier(null, "*")))))
+                                NamedExpression(null, Reference(Identifier(listOf(), "a"))),
+                                NamedExpression(null, FunctionCall("count", listOf(Reference(Identifier(listOf(), "*")))))
                         ),
-                        fromClause = FromClause(DataSource.Table(Identifier(null, "foo"), null)),
+                        fromClause = FromClause(DataSource.Table(Identifier(listOf(), "foo"), null)),
                         groupByExpressions = listOf(
-                                Reference(Identifier(null, "a"))
+                                Reference(Identifier(listOf(), "a"))
                         )
                 )
         )
@@ -48,15 +48,15 @@ class GroupByTest {
         val expected = SelectStmt(
                 SelectClause(
                         listOf(
-                                NamedExpression(null, Reference(Identifier(null, "a"))),
-                                NamedExpression(null, FunctionCall("count", listOf(Reference(Identifier(null, "*")))))
+                                NamedExpression(null, Reference(Identifier(listOf(), "a"))),
+                                NamedExpression(null, FunctionCall("count", listOf(Reference(Identifier(listOf(), "*")))))
                         ),
-                        fromClause = FromClause(DataSource.Table(Identifier(null, "foo"), null)),
+                        fromClause = FromClause(DataSource.Table(Identifier(listOf(), "foo"), null)),
                         groupByExpressions = listOf(
-                                Reference(Identifier(null, "a"))
+                                Reference(Identifier(listOf(), "a"))
                         ),
                         havingPredicate = FunctionCall(">", listOf(
-                                FunctionCall("count", listOf(Reference(Identifier(null, "*")))),
+                                FunctionCall("count", listOf(Reference(Identifier(listOf(), "*")))),
                                 IntLiteral(1)
                         ), infix = true)
                 )

@@ -18,11 +18,11 @@ class WhereTest {
                         listOf(
                             NamedExpression(null, IntLiteral(1))
                         ),
-                        fromClause = FromClause(DataSource.Table(Identifier(null, "foo"), null)),
+                        fromClause = FromClause(DataSource.Table(Identifier(listOf(), "foo"), null)),
                         predicate = FunctionCall("=", listOf(
                                 FunctionCall("+", listOf(
-                                        Reference(Identifier(null, "a")),
-                                        Reference(Identifier(null, "b"))
+                                        Reference(Identifier(listOf(), "a")),
+                                        Reference(Identifier(listOf(), "b"))
                                 ), infix = true),
                                 IntLiteral(2)
                         ), infix = true)

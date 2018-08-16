@@ -16,7 +16,7 @@ class SelectTest {
         val expected = SelectStmt(
                 SelectClause(listOf(
                         NamedExpression("foo", IntLiteral(1)),
-                        NamedExpression(null, Reference(Identifier(null, "bar"))),
+                        NamedExpression(null, Reference(Identifier(listOf(), "bar"))),
                         NamedExpression(null, FunctionCall("*", listOf(
                                 IntLiteral(1),
                                 IntLiteral(3)
@@ -42,8 +42,8 @@ class SelectTest {
         val statement = "Select *, foo.*;"
         val expected = SelectStmt(
                 SelectClause(listOf(
-                        NamedExpression(null, Reference(Identifier(null, "*"))),
-                        NamedExpression(null, Reference(Identifier("foo", "*")))
+                        NamedExpression(null, Reference(Identifier(listOf(), "*"))),
+                        NamedExpression(null, Reference(Identifier(listOf("foo"), "*")))
                 ))
         )
         assertEquals(expected, parseStatement(statement, true))
@@ -64,8 +64,8 @@ class SelectTest {
         val statement = "Select distinct foobar, baz;"
         val expected = SelectStmt(
                 SelectClause(listOf(
-                        NamedExpression(null, Reference(Identifier(null, "foobar"))),
-                        NamedExpression(null, Reference(Identifier(null, "baz")))
+                        NamedExpression(null, Reference(Identifier(listOf(), "foobar"))),
+                        NamedExpression(null, Reference(Identifier(listOf(), "baz")))
                 ), distinct = true)
         )
         assertEquals(expected, parseStatement(statement, true))
@@ -87,11 +87,11 @@ class SelectTest {
         val expected = SelectStmt(
                 SelectClause(
                         listOf(
-                            NamedExpression(null, Reference(Identifier(null, "a"))),
-                            NamedExpression(null, Reference(Identifier(null, "b")))
+                            NamedExpression(null, Reference(Identifier(listOf(), "a"))),
+                            NamedExpression(null, Reference(Identifier(listOf(), "b")))
                         ),
                         fromClause = FromClause(
-                                DataSource.Table(Identifier("mydb", "my_table"), null)
+                                DataSource.Table(Identifier(listOf("mydb"), "my_table"), null)
                         )
                 )
         )
@@ -117,11 +117,11 @@ class SelectTest {
         val expected = SelectStmt(
                 SelectClause(
                         listOf(
-                                NamedExpression(null, Reference(Identifier(null, "a"))),
-                                NamedExpression(null, Reference(Identifier(null, "b")))
+                                NamedExpression(null, Reference(Identifier(listOf(), "a"))),
+                                NamedExpression(null, Reference(Identifier(listOf(), "b")))
                         ),
                         fromClause = FromClause(
-                                DataSource.Table(Identifier("mydb", "my_table"), Identifier(null, "t"))
+                                DataSource.Table(Identifier(listOf("mydb"), "my_table"), Identifier(listOf(), "t"))
                         )
                 )
         )
@@ -146,18 +146,18 @@ class SelectTest {
         val expected = SelectStmt(
                 SelectClause(
                         listOf(
-                                NamedExpression(null, Reference(Identifier(null, "a"))),
-                                NamedExpression(null, Reference(Identifier(null, "b")))
+                                NamedExpression(null, Reference(Identifier(listOf(), "a"))),
+                                NamedExpression(null, Reference(Identifier(listOf(), "b")))
                         ),
                         fromClause = FromClause(
                                 DataSource.SubQuery(
                                         SelectClause(
                                                 listOf(
-                                                        NamedExpression(null, Reference(Identifier(null, "*")))
+                                                        NamedExpression(null, Reference(Identifier(listOf(), "*")))
                                                 ),
-                                                fromClause = FromClause(DataSource.Table(Identifier(null, "foobar"),null))
+                                                fromClause = FromClause(DataSource.Table(Identifier(listOf(), "foobar"),null))
                                         ),
-                                        Identifier(null, "t")
+                                        Identifier(listOf(), "t")
                                 )
                         )
                 )
@@ -190,18 +190,18 @@ class SelectTest {
                 Union(
                     SelectClause(
                             listOf(
-                                    NamedExpression(null, Reference(Identifier(null, "a")))
+                                    NamedExpression(null, Reference(Identifier(listOf(), "a")))
                             ),
                             fromClause = FromClause(
-                                    DataSource.Table(Identifier(null, "table1"), null)
+                                    DataSource.Table(Identifier(listOf(), "table1"), null)
                             )
                     ),
                     SelectClause(
                             listOf(
-                                    NamedExpression(null, Reference(Identifier(null, "a")))
+                                    NamedExpression(null, Reference(Identifier(listOf(), "a")))
                             ),
                             fromClause = FromClause(
-                                    DataSource.Table(Identifier(null, "table2"), null)
+                                    DataSource.Table(Identifier(listOf(), "table2"), null)
                             )
                     ),
                     true
@@ -234,15 +234,15 @@ class SelectTest {
                 listOf(
                         NamedExpression("a", IntLiteral(1))
                 )
-        ), Identifier(null, "foo"))
+        ), Identifier(listOf(), "foo"))
 
         val expected = SelectStmt(
                 SelectClause(
                         listOf(
-                                NamedExpression(null, Reference(Identifier(null, "a")))
+                                NamedExpression(null, Reference(Identifier(listOf(), "a")))
                         ),
                         fromClause = FromClause(
-                                DataSource.Table(Identifier(null, "foo"), null)
+                                DataSource.Table(Identifier(listOf(), "foo"), null)
                         ),
                         ctes = listOf(cte)
                 )
@@ -294,13 +294,13 @@ class SelectTest {
         val expected = SelectStmt(
                 SelectClause(
                         listOf(
-                                NamedExpression(null, Reference(Identifier(null, "a")))
+                                NamedExpression(null, Reference(Identifier(listOf(), "a")))
                         ),
                         fromClause = FromClause(
                                 DataSource.TableFunction(
                                         FunctionCall("table_func", listOf(IntLiteral(1))),
-                                        Identifier(null, "foo"),
-                                        listOf(Identifier(null, "a"))
+                                        Identifier(listOf(), "foo"),
+                                        listOf(Identifier(listOf(), "a"))
                                 )
                         )
                 )
