@@ -181,9 +181,9 @@ expression
   | expression ( OP_MULT | OP_DIV | OP_MOD ) expression
   | expression ( OP_PLUS | OP_MINUS ) expression
   | expression ( OP_GT | OP_GTE | OP_LT | OP_LTE | OP_EQ | OP_NEQ ) expression
-  | expression ( AND | OR ) expression
   | expression BETWEEN expression AND expression
   | expression NOT? IN OP_OPEN_BRACKET expression (OP_COMMA expression)* OP_CLOSE_BRACKET
+  | expression ( AND | OR ) expression
   | qualifiedIdentifier
   | functionCall
   | caseStatement

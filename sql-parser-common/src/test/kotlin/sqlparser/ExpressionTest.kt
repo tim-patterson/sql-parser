@@ -144,6 +144,30 @@ class ExpressionTest {
     }
 
     @Test
+    fun testInWithAnd() {
+        val expression = " 1= 1 and foobar in(1,2,3)"
+        val expected = FunctionCall("AND", listOf(
+                FunctionCall("=", listOf(IntLiteral(1), IntLiteral(1)), infix = true),
+                FunctionCall("IN", listOf(
+                    Reference(Ast.Identifier(listOf(), "foobar")),
+                    IntLiteral(1),
+                    IntLiteral(2),
+                    IntLiteral(3)
+                ), infix = true)
+        ), infix = true)
+
+        assertEquals(expected, parseExpression(expression, true))
+    }
+
+    @Test
+    fun testInWithAndToString() {
+        val expression = " 1= 1 and foobar in(1,2,3)"
+        val expected = "1 = 1 AND foobar IN (1, 2, 3)"
+
+        assertEquals(expected, SqlPrinter.from(parseExpression(expression, true)))
+    }
+
+    @Test
     fun testNotIn() {
         val expression = "1+ 2 not in(1,2,3)"
         val expected = FunctionCall("NOT IN", listOf(
